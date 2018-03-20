@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "memory": "cpp",
+        "cstddef": "cpp",
+        "cstdlib": "cpp",
+        "new": "cpp",
+        "array": "cpp",
+        "cstdio": "cpp",
+        "cwchar": "cpp",
+        "exception": "cpp",
+        "type_traits": "cpp",
+        "initializer_list": "cpp",
+        "string": "cpp"
+    }
+}
