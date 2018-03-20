@@ -1,6 +1,6 @@
 ## TinySTL
 
-It is my implement of STL(standard template library) in C++.
+It is my implementation of STL(standard template library) in C++.
 Just for fun!
 
 It will include the following 6 parts:
