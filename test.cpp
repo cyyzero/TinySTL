@@ -4,11 +4,11 @@
 #include "Allocator/defaulloc.h"
 int main()
 {
-    cyyzero::allocator<std::string> a2;
-    std::string* s = a2.allocate(2); // 2 个 string 的空间
+    cyyzero::allocator<int> a2;
+    int* s = a2.allocate(2); // 2 个 string 的空间
  
-    a2.construct(s, "foo");
-    a2.construct(s + 1, "bar");
+    a2.construct(s, 1);
+    a2.construct(s + 1, 2);
  
     std::cout << s[0] << ' ' << s[1] << '\n';
  

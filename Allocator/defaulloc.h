@@ -20,7 +20,7 @@ namespace cyyzero
         using const_reference = const T&;
         using size_type       = std::size_t;
         using difference_type = std::ptrdiff_t;
-        
+        using propagate_on_container_move_assignment = std::true_type;
         // constructors
         allocator() noexcept { }
 
@@ -44,7 +44,7 @@ namespace cyyzero
             {
                 throw std::bad_alloc();
             }
-            return static_cast<pointer>(::operator new(n*sizeof(T)));
+            return static_cast<pointer>(::operator new(n * sizeof(T)));
         }
 
         void deallocate(pointer p, size_type)
@@ -108,11 +108,7 @@ namespace cyyzero
     class allocator<void>
     {
     public:
-        using size_type       = std::size_t;
-        using difference_type = std::ptrdiff_t;
-        using pointer         = void*;
-        using const_pointer   = const void*;
-        using value_type      = void;
+        using pointer = void*;
     };
 }
 
