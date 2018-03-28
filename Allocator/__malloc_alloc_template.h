@@ -1,5 +1,5 @@
-#ifndef MALLOC_ALLOC_TEMPLATE
-#define MALLOC_ALLOC_TEMPLATE
+#ifndef MALLOC_ALLOC_TEMPLATE_H
+#define MALLOC_ALLOC_TEMPLATE_H
 
 #if 0
 # include <new>
@@ -23,7 +23,7 @@ public:
     static void *allocate(std::size_t n)
     {
         void *result = malloc(n);
-        if (result == 0)
+        if (result == nullptr)
             result = oom_malloc(n);
         return result;
     }
@@ -36,7 +36,7 @@ public:
     static void * reallocate(void *p, std::size_t /*old_sz*/, std::size_t new_sz)
     {
         void *result = realloc(p, new_sz);
-        if (result == 0)
+        if (result == nullptr)
             result = oom_realloc(p, new_sz);
         return result;
     }
