@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "functional": "cpp"
+        "functional": "cpp",
+        "array": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
     }
 }
