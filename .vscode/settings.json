@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "functional": "cpp",
-        "array": "cpp",
-        "initializer_list": "cpp",
-        "utility": "cpp"
-    }
-}
