@@ -38,4 +38,9 @@ int main()
     a1.back() = 4;
     for (const auto i: a1)
         std::cout << i << " ";
+    
+    std::cout << cyyzero::get<0>(a1) << std::endl;
+
+    const cyyzero::array<int, 4> a4 = {1,2,3,4};
+    std::cout << cyyzero::get<1>(a4) << std::endl;
 }
