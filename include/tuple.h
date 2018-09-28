@@ -8,6 +8,114 @@
 
 namespace cyyzero
 {
+namespace
+{
+
+template<std::size_t Index, typename... Elements>
+struct Tuple_impl;
+
+// 0-element Tuple_impl. Basic case for the inheritance recursion.
+template<std::size_t Index>
+struct Tuple_impl<Index>
+{
+protected:
+    void swap_impl(Tuple_impl&) { }
+};
+
+template<std::size_t Index, typename Head, typename... Tail>
+struct Tuple_impl<Index, Head, Tail...>
+    : public Tuple_impl<Index+1, Tail...>,
+      private Head_base<Index, Head, std::is_empty_v<Head>>
+{
+    using Inherited = Tuple_impl<Index+1, Tail...>;
+    using Base      = Head_base<Index, Head, std::is_empty_v<Head>>;
+
+    Head& head()
+    {
+        return Base::head();
+    }
+
+    const Head& head() const
+    {
+        return Base::head();
+    }
+
+    Inherited& tail()
+    {
+        return *this;
+    }
+
+    const Inherited& tail() const
+    {
+        return *this;
+    }
+
+    // constructors
+    constexpr Tuple_impl()
+        : Inherited(), Base() { }
+
+    explicit constexpr Tuple_impl(const Head& head, const Tail&... tail)
+        : Inherited(tail...), Base(head) { }
+
+    template<typename UHead, typename... UTail>
+    explicit Tuple_impl(UHead&& head, UTail&&... tail)
+        : Inherited(std::forward<UTail>(tail)...),
+          Base(std::forward<UHead>(head)) { }
+
+    constexpr Tuple_impl(const Tuple_impl&) = default;
+
+    Tuple_impl(Tuple_impl&& other)
+        : Inherited(std::move(other.tail())),
+          Base(std::forward<Head>(other.head())) { }
+
+    template<typename... UElements>
+    Tuple_impl(const Tuple_impl<Index, UElements...>& other)
+        : Inherited(other.tail()), Base(other.head()) { }
+
+    template<typename UHead, typename... UTail>
+    Tuple_impl(Tuple_impl<Index, UHead, UTail...>&& other)
+        : Inherited(std::move(other.tail())), Base(std::forward<UHead>(other.head)) { }
+
+    // assignments
+    Tuple_impl& operator=(const Tuple_impl& other)
+    {
+        head() = other.head();
+        tail() = other.tail();
+        return *this;
+    }
+
+    Tuple_impl& operator=(Tuple_impl&& other)
+    {
+        head() = std::forward<Head>(other.head());
+        tail() = std::move(other.tail());
+        return *this;
+    }
+
+    template<typename... UElements>
+    Tuple_impl& operator=(const Tuple_impl<Index, UElements...>& other)
+    {
+        head() = other.head();
+        tail() = other.head();
+        return *this;
+    }
+
+    template<typename UHead, typename... UTail>
+    Tuple_impl& operator=(Tuple_impl<Index, UHead, UTail...>&& other)
+    {
+        head() = std::forward<UHead>(other.head());
+        tail() = std::move(other.tail());
+        return *this;
+    }
+
+protected:
+    void swap_impl(Tuple_impl& other)
+    {
+        Base::swap_impl(other.head());
+        Inherited::swap_impl(other.tail());
+    }
+};
+} // unnamed namespace
+
 template<typename... Elements>
 class Tuple : public Tuple_impl<0, Elements...>
 {
