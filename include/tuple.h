@@ -44,6 +44,38 @@ struct Head_base<Index, Head, true>: public Head
     }
 };
 
+template<std::size_t Index, typename Head>
+struct Head_base<Index, Head, false>
+{
+    constexpr Head_base()
+        : m_head_impl() { }
+
+    constexpr Head_base(const Head& head)
+        : m_head_impl(head) { }
+
+    template<typename UHead>
+    Head_base(UHead&& head)
+        : m_head_impl(std::forward<UHead>(head)) { }
+
+    Head& head()
+    {
+        return m_head_impl;
+    }
+
+    const Head& head() const
+    {
+        return m_head_impl;
+    }
+
+    void swap_impl(Head& head)
+    {
+        using std::swap;
+        swap(head, m_head_impl)
+    }
+
+    Head m_head_impl;
+}
+
 template<std::size_t Index, typename... Elements>
 struct Tuple_impl;
 
