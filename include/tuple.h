@@ -11,6 +11,39 @@ namespace cyyzero
 namespace
 {
 
+template<std::size_t Index, typename Head, bool IsEmpty>
+struct Head_base;
+
+template<std::size_t Index, typename Head>
+struct Head_base<Index, Head, true>: public Head
+{
+    constexpr Head_base()
+        : Head() { }
+
+    constexpr Head_base(const Head& head)
+        : Head(head) { }
+
+    template<typename UHead>
+    Head_base(UHead&& head)
+        : Head(std::forward<UHead>(h)) { }
+
+    Head& head()
+    {
+        return *this;
+    }
+
+    const Head& head() const
+    {
+        return *this;
+    }
+
+    void swap_impl(Head& head)
+    {
+        using std::swap;
+        swap(h, head());
+    }
+};
+
 template<std::size_t Index, typename... Elements>
 struct Tuple_impl;
 
