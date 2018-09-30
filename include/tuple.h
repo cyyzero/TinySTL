@@ -25,7 +25,7 @@ struct Head_base<Index, Head, true>: public Head
 
     template<typename UHead>
     Head_base(UHead&& head)
-        : Head(std::forward<UHead>(h)) { }
+        : Head(std::forward<UHead>(head)) { }
 
     Head& head()
     {
@@ -40,7 +40,7 @@ struct Head_base<Index, Head, true>: public Head
     void swap_impl(Head& head)
     {
         using std::swap;
-        swap(h, head());
+        swap(head, head());
     }
 };
 
@@ -70,11 +70,11 @@ struct Head_base<Index, Head, false>
     void swap_impl(Head& head)
     {
         using std::swap;
-        swap(head, m_head_impl)
+        swap(head, m_head_impl);
     }
 
     Head m_head_impl;
-}
+};
 
 template<std::size_t Index, typename... Elements>
 struct Tuple_impl;
@@ -195,13 +195,13 @@ public:
 
     template<typename... UElements, typename = std::enable_if_t<
              std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
-    explicit explicit Tuple(UElements&&... elements)
+    explicit constexpr Tuple(UElements&&... elements)
         : Inherited(std::forward<UElements>(elements)...) { }
 
     template<typename... UElements, typename = std::enable_if_t<
              std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
     constexpr Tuple(const Tuple<UElements...>& other)
-        : Inherited(static_cast<Tuple_impl<0, UElements...>&>(other)) { }
+        : Inherited(static_cast<const Tuple_impl<0, UElements...>&>(other)) { }
 
     template<typename... UElements, typename = std::enable_if_t<
              std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
