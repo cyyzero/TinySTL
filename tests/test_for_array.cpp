@@ -1,4 +1,4 @@
-#include "../Container/array.h"
+#include "array.h"
 
 #include <string>
 #include <iterator>
@@ -8,9 +8,9 @@
 int main()
 {
     // 用聚合初始化构造
-    cyyzero::array<int, 3> a1{ {1, 2, 3} }; // C++11 中要求双花括号（ C++14 中不要求）
-    cyyzero::array<int, 3> a2 = {1, 2, 3};  // 决不要求在 = 后
-    cyyzero::array<std::string, 2> a3 = { std::string("a"), "b" };
+    cyy::array<int, 3> a1{ {1, 2, 3} }; // C++11 中要求双花括号（ C++14 中不要求）
+    cyy::array<int, 3> a2 = {1, 2, 3};  // 决不要求在 = 后
+    cyy::array<std::string, 2> a3 = { std::string("a"), "b" };
     
     std::cout << "a1[1]"<< a1[1] << std::endl;
     // 支持容器操作
@@ -39,8 +39,8 @@ int main()
     for (const auto i: a1)
         std::cout << i << " ";
     
-    std::cout << cyyzero::get<0>(a1) << std::endl;
+    std::cout << cyy::get<0>(a1) << std::endl;
 
-    const cyyzero::array<int, 4> a4 = {1,2,3,4};
-    std::cout << cyyzero::get<1>(a4) << std::endl;
+    const cyy::array<int, 4> a4 = {1,2,3,4};
+    std::cout << cyy::get<1>(a4) << std::endl;
 }

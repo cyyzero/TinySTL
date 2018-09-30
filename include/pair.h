@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <tuple>
 
-namespace cyyzero
+namespace cyy
 {
 
 struct piecewise_construct_t { };
@@ -199,6 +199,6 @@ make_pair(T1 &&first, T2 &&second)
 
 // TODO: get<>, class tuple_size<pair>, class tuple_element<pair>
 
-} // namespace cyyzero
+} // namespace cyy
 
 #endif // PAIR_H

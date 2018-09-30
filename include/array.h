@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <utility>
 
-namespace cyyzero
+namespace cyy
 {
 
 template<typename T, std::size_t N>

@@ -7,7 +7,7 @@
 #include <climits>
 #include <iostream>
 
-namespace cyyzero
+namespace cyy
 {
 template <typename T>
 class allocator

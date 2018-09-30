@@ -6,7 +6,7 @@
 
 #define __THROW_BAD_ALLOC throw std::bad_alloc
 
-namespace cyyzero
+namespace cyy
 {
 template <int inst>
 class __malloc_alloc_template

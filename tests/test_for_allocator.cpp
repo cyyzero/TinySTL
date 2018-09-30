@@ -1,10 +1,10 @@
 #include <memory>
 #include <string>
 #include <iostream>
-#include "Allocator/defaulloc.h"
+#include "defaulloc.h"
 int main()
 {
-    cyyzero::allocator<int> a2;
+    cyy::allocator<int> a2;
     int* s = a2.allocate(2); // 2 个 string 的空间
  
     a2.construct(s, 1);

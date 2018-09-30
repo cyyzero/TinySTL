@@ -6,7 +6,7 @@
 #include <memory>
 #include "pair.h"
 
-namespace cyyzero
+namespace cyy
 {
 namespace
 {
@@ -428,6 +428,6 @@ public:
     }
 };
 
-} // namespace cyyzero
+} // namespace cyy
 
 #endif // TUPLE_H
