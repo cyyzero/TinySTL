@@ -4,6 +4,7 @@
 
 int main()
 {
+    std::tuple
     cyy::Tuple<int, std::string, double> t1;
     // std::cout << "Value-initialized: "; print(t1);
     cyy::Tuple<int, std::string, double> t2(42, "Test", -3.14);

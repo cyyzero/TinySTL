@@ -119,15 +119,18 @@ struct Tuple_impl<Index, Head, Tail...>
     constexpr Tuple_impl()
         : Inherited(), Base() { }
 
-    explicit constexpr Tuple_impl(const Head& head, const Tail&... tail)
+    explicit constexpr
+    Tuple_impl(const Head& head, const Tail&... tail)
         : Inherited(tail...), Base(head) { }
 
     template<typename UHead, typename... UTail>
-    explicit Tuple_impl(UHead&& head, UTail&&... tail)
+    explicit
+    Tuple_impl(UHead&& head, UTail&&... tail)
         : Inherited(std::forward<UTail>(tail)...),
           Base(std::forward<UHead>(head)) { }
 
-    constexpr Tuple_impl(const Tuple_impl&) = default;
+    Tuple_impl(const Tuple_impl& other)
+        : Inherited(other.tail()), Base(other.head()) { }
 
     Tuple_impl(Tuple_impl&& other)
         : Inherited(std::move(other.tail())),
@@ -137,9 +140,9 @@ struct Tuple_impl<Index, Head, Tail...>
     Tuple_impl(const Tuple_impl<Index, UElements...>& other)
         : Inherited(other.tail()), Base(other.head()) { }
 
-    template<typename UHead, typename... UTail>
-    Tuple_impl(Tuple_impl<Index, UHead, UTail...>&& other)
-        : Inherited(std::move(other.tail())), Base(std::forward<UHead>(other.head)) { }
+    template<typename... UElements>
+    Tuple_impl(Tuple_impl<Index, UElements...>&& other)
+        : Inherited(std::move(other.tail())), Base(std::move(other.head())) { }
 
     // assignments
     Tuple_impl& operator=(const Tuple_impl& other)
@@ -151,7 +154,7 @@ struct Tuple_impl<Index, Head, Tail...>
 
     Tuple_impl& operator=(Tuple_impl&& other)
     {
-        head() = std::forward<Head>(other.head());
+        head() = std::move(other.head());
         tail() = std::move(other.tail());
         return *this;
     }
@@ -164,15 +167,15 @@ struct Tuple_impl<Index, Head, Tail...>
         return *this;
     }
 
-    template<typename UHead, typename... UTail>
-    Tuple_impl& operator=(Tuple_impl<Index, UHead, UTail...>&& other)
+    template<typename... UElements>
+    Tuple_impl& operator=(Tuple_impl<Index, UElements...>&& other)
     {
-        head() = std::forward<UHead>(other.head());
+        head() = std::move(other.head());
         tail() = std::move(other.tail());
         return *this;
     }
 
-protected:
+protected:  
     void swap_impl(Tuple_impl& other)
     {
         Base::swap_impl(other.head());
