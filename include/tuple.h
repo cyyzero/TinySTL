@@ -190,10 +190,12 @@ class Tuple : public Tuple_impl<0, Elements...>
     using Inherited = Tuple_impl<0, Elements...>;
 public:
     // constructors
-    constexpr Tuple()
+    constexpr
+    Tuple()
         : Inherited() { }
 
-    explicit constexpr Tuple(const Elements&... elements)
+    explicit constexpr
+    Tuple(const Elements&... elements)
         : Inherited(elements...) { }
 
     template<typename... UElements, typename = std::enable_if_t<
@@ -215,36 +217,36 @@ public:
 
     Tuple(Tuple&&) = default;
 
-    template<typename Alloc>
-    Tuple(std::allocator_arg_t tag, const Alloc& a)
-        : Inherited(tag, a) { }
+    // template<typename Alloc>
+    // Tuple(std::allocator_arg_t tag, const Alloc& a)
+    //     : Inherited(tag, a) { }
 
-    template<typename Alloc>
-    Tuple(std::allocator_arg_t tag, const Alloc& a, const Elements&... elements)
-        : Inherited(tag, a, elements...) { }
+    // template<typename Alloc>
+    // Tuple(std::allocator_arg_t tag, const Alloc& a, const Elements&... elements)
+    //     : Inherited(tag, a, elements...) { }
 
-    template<typename Alloc, typename... UElements, typename = std::enable_if_t<
-             std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
-    Tuple(std::allocator_arg_t tag, const Alloc& a, UElements&&... elements)
-        : Inherited(tag, a, std::forward<UElements>(elements)...) { }
+    // template<typename Alloc, typename... UElements, typename = std::enable_if_t<
+    //          std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
+    // Tuple(std::allocator_arg_t tag, const Alloc& a, UElements&&... elements)
+    //     : Inherited(tag, a, std::forward<UElements>(elements)...) { }
 
-    template<typename Alloc, typename... UElements, typename = std::enable_if_t<
-             std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
-    Tuple(std::allocator_arg_t tag, const Alloc& a, const Tuple<UElements...>& other)
-        : Inherited(tag, a, static_cast<Tuple_impl<0, UElements...>&>(other)) { }
+    // template<typename Alloc, typename... UElements, typename = std::enable_if_t<
+    //          std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
+    // Tuple(std::allocator_arg_t tag, const Alloc& a, const Tuple<UElements...>& other)
+    //     : Inherited(tag, a, static_cast<Tuple_impl<0, UElements...>&>(other)) { }
 
-    template<typename Alloc, typename... UElements, typename = std::enable_if_t<
-             std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
-    Tuple(std::allocator_arg_t tag, const Alloc& a, Tuple<UElements...>&& other)
-        : Inherited(tag, a, static_cast<Tuple_impl<0, UElements...>&&>(other)) { }
+    // template<typename Alloc, typename... UElements, typename = std::enable_if_t<
+    //          std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
+    // Tuple(std::allocator_arg_t tag, const Alloc& a, Tuple<UElements...>&& other)
+    //     : Inherited(tag, a, static_cast<Tuple_impl<0, UElements...>&&>(other)) { }
 
-    template<typename Alloc>
-    Tuple(std::allocator_arg_t tag, const Alloc& a, const Tuple& other)
-        : Inherited(tag, a, static_cast<const Inherited&>(other)) { }
+    // template<typename Alloc>
+    // Tuple(std::allocator_arg_t tag, const Alloc& a, const Tuple& other)
+    //     : Inherited(tag, a, static_cast<const Inherited&>(other)) { }
 
-    template<typename Alloc>
-    Tuple(std::allocator_arg_t tag, const Alloc& a, Tuple&& other)
-        : Inherited(tag, a, static_cast<Inherited&&>(other)) { }
+    // template<typename Alloc>
+    // Tuple(std::allocator_arg_t tag, const Alloc& a, Tuple&& other)
+    //     : Inherited(tag, a, static_cast<Inherited&&>(other)) { }
 
 
     // assignment
@@ -286,10 +288,11 @@ public:
 template<>
 class Tuple<>
 {
-    void swap(Tuple& other)
+    void swap(Tuple&)
     {
     }
 };
+
 // Specialization for 2-elements tuple
 template<typename T1, typename T2>
 class Tuple<T1, T2> : public Tuple_impl<0, T1, T2>
@@ -430,6 +433,14 @@ public:
         Inherited::swap_impl(other);
     }
 };
+
+template<typename... Types>
+constexpr
+Tuple<typename strip_reference_wrapper<Types>::type...>
+make_tuple(Types&&... args)
+{
+    return Tuple<typename strip_reference_wrapper<Types>::type...>(std::forward<Types>(args)...);
+}
 
 } // namespace cyy
 
