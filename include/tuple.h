@@ -434,6 +434,38 @@ public:
     }
 };
 
+// class Tuple_size
+template<typename T>
+class Tuple_size;
+
+template<typename... Types>
+class Tuple_size<Tuple<Types...>>
+    : public std::integral_constant<std::size_t, sizeof...(Types)>
+{
+};
+
+template<typename T>
+class Tuple_size<const T>
+    : public std::integral_constant<std::size_t, Tuple_size<T>::value>
+{
+};
+
+template<typename T>
+class Tuple_size<volatile T>
+    : public std::integral_constant<std::size_t, Tuple_size<T>::value>
+{
+};
+
+template<typename T>
+class Tuple_size<const volatile T>
+    : public std::integral_constant<std::size_t, Tuple_size<T>::value>
+{
+};
+
+template<typename T>
+inline constexpr std::size_t Tuple_size_v = Tuple_size<T>::value;
+
+// make_tuple
 template<typename... Types>
 constexpr
 Tuple<typename strip_reference_wrapper<Types>::type...>
