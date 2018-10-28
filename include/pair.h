@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <tuple>
+#include "type_traits.h"
 
 namespace cyy
 {
@@ -164,29 +165,6 @@ inline void swap(pair<T1, T2> &lhs, pair<T1, T2> &rhs)
 {
     lhs.swap(rhs);
 }
-
-namespace
-{
-template<typename T>
-struct strip_reference_wrapper
-{
-    using type = T;
-};
-
-template<typename T>
-struct strip_reference_wrapper<std::reference_wrapper<T>>
-{
-    using type = T&;
-};
-
-template<typename T>
-struct decay_and_strip
-{
-    using type = typename strip_reference_wrapper<typename std::decay<T>::type>::type;
-};
-
-} // unnamed namespace
-
 
 template<typename T1, typename T2>
 inline pair<typename decay_and_strip<T1>::type, typename decay_and_strip<T2>::type>
