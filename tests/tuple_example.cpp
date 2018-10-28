@@ -1,10 +1,11 @@
 #include <vector>
+#include <string>
 #include <memory>
 #include "tuple.h"
 
 int main()
 {
-    std::tuple
+    // std::tuple
     cyy::Tuple<int, std::string, double> t1;
     // std::cout << "Value-initialized: "; print(t1);
     cyy::Tuple<int, std::string, double> t2(42, "Test", -3.14);
@@ -13,7 +14,10 @@ int main()
     // std::cout << "Implicitly converted: "; print(t3);
     cyy::Tuple<int, double> t4(cyy::Tuple<int, double>(42, 3.14));
     // std::cout << "Constructed from a pair"; print(t4);
- 
+    {
+        std::vector<int> vi{1,2,3,4};
+        auto t5 = make_tuple(std::ref(vi), 10, std::string("fuck"), 10.0f, 'v');
+    }
     // given Allocator my_alloc with a single-argument constructor my_alloc(int)
     // use my_alloc(1) to allocate 10 ints in a vector
     // std::vector<int, std::alloc> v(10, 1, std::alloc(1));
