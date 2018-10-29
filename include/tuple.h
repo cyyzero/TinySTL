@@ -465,6 +465,46 @@ class Tuple_size<const volatile T>
 template<typename T>
 inline constexpr std::size_t Tuple_size_v = Tuple_size<T>::value;
 
+// Tuple_element
+template<std::size_t I, typename T>
+struct Tuple_element;
+
+///  Recursive case for Tuple_element
+template<std::size_t I, typename Head, typename... Tails>
+struct Tuple_element<I, Tuple<Head, Tails...>>
+    : Tuple_element<I-1, Tuple<Tails...>>
+{
+};
+
+/// Dest case for Tuple_element
+template<typename Head, typename... Tails>
+struct Tuple_element<0, Tuple<Head, Tails...>>
+{
+    using type = Head;
+};
+
+template<std::size_t I, typename T>
+struct Tuple_element<I, const T>
+{
+    using type = std::add_const_t<typename Tuple_element<I, T>::type>;
+};
+
+template<std::size_t I, typename T>
+struct Tuple_element<I, volatile T>
+{
+    using type = std::add_volatile_t<typename Tuple_element<I, T>::type>;
+};
+
+template<std::size_t I, typename T>
+struct Tuple_element<I, const volatile T>
+{
+    using type = std::add_cv_t<typename Tuple_element<I, T>::type>;
+};
+
+/// helper for Tuple_element
+template<std::size_t I, typename T>
+using Tuple_element_t = typename Tuple_element<I, T>::type;
+
 // make_tuple
 template<typename... Types>
 constexpr
