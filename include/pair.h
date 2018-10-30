@@ -63,8 +63,7 @@ struct pair
         : first(std::forward<U1>(p.first)), second(std::forward<U2>(p.second)) { }
 
     template<typename... Args1, typename... Args2>
-    pair(piecewise_construct_t, std::tuple<Args1...> first_args, std::tuple<Args2...> second_args)
-        : first(), second() { }
+    pair(piecewise_construct_t, std::tuple<Args1...> first_args, std::tuple<Args2...> second_args);
 
     pair& operator=(const pair &other)
     {
