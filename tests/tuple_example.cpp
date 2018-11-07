@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <tuple>
 #include "tuple.h"
 
 int main()
@@ -30,4 +31,15 @@ int main()
     // use my_alloc(2) to allocate 10 ints in a vector in a tuple
     // cyy::Tuple<int, std::vector<int, my_alloc>, double> t5(std::allocator_arg,
     //                                                       my_alloc(2), 42, v,  -3.14);
+
+    {
+        auto t = cyy::make_tuple(1, "Foo", 3.14);
+        // 基于下标的访问
+        std::cout << "(" << cyy::get<0>(t) << ", " << cyy::get<1>(t)
+                << ", " << cyy::get<2>(t) << ")\n";
+        cyy::Tuple<int> tt{1};
+        std::cout << std::is_same_v<int&, decltype(cyy::get<0>(t))> << std::endl;
+        std::cout << std::is_same_v<int&, decltype(cyy::get<0>(tt))> << std::endl;
+        std::cout << std::is_same_v<int&&, decltype(cyy::get<0>(std::move(tt)))> << std::endl;
+    }
 }

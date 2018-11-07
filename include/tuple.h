@@ -15,7 +15,8 @@ template<std::size_t Index, typename Head, bool IsEmpty>
 struct Head_base;
 
 template<std::size_t Index, typename Head>
-struct Head_base<Index, Head, true>: public Head
+struct Head_base<Index, Head, true>
+    : public Head
 {
     constexpr Head_base()
         : Head() { }
@@ -515,17 +516,17 @@ make_tuple(Types&&... args)
 }
 
 // get
-{
+namespace {
 template<std::size_t I, typename Head, typename... Tails>
 constexpr
-Head& get_helper(Tuple_impl<I, Head, Tails>& t)
+Head& get_helper(Tuple_impl<I, Head, Tails...>& t)
 {
     return t.head();
 }
 
 template<std::size_t I, typename Head, typename... Tails>
 constexpr
-const Head& get_helper(Tuple_impl<I, Head, Tails>& t)
+const Head& get_helper(const Tuple_impl<I, Head, Tails...>& t)
 {
     return t.head();
 }
@@ -553,7 +554,7 @@ constexpr
 Tuple_element_t<I, Tuple<Types...>>&&
 get(Tuple<Types...>&& t) noexcept
 {
-    
+    return std::move(get<I>(t));
 }
 
 template<std::size_t I, typename... Types>
@@ -561,7 +562,7 @@ constexpr
 const Tuple_element_t<I, Tuple<Types...>>&&
 get(const Tuple<Types...>&& t) noexcept
 {
-
+    return std::move(get<I>(t));
 }
 
 } // namespace cyy
