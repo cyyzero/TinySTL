@@ -514,6 +514,56 @@ make_tuple(Types&&... args)
     return Tuple<typename strip_reference_wrapper<Types>::type...>(std::forward<Types>(args)...);
 }
 
+// get
+{
+template<std::size_t I, typename Head, typename... Tails>
+constexpr
+Head& get_helper(Tuple_impl<I, Head, Tails>& t)
+{
+    return t.head();
+}
+
+template<std::size_t I, typename Head, typename... Tails>
+constexpr
+const Head& get_helper(Tuple_impl<I, Head, Tails>& t)
+{
+    return t.head();
+}
+
+} // unnamed namespace
+
+template<std::size_t I, typename... Types>
+constexpr
+Tuple_element_t<I, Tuple<Types...>>&
+get(Tuple<Types...>& t) noexcept
+{
+    return get_helper<I>(t);
+}
+
+template<std::size_t I, typename... Types>
+constexpr
+const Tuple_element_t<I, Tuple<Types...>>&
+get(const Tuple<Types...>& t) noexcept
+{
+    return get_helper<I>(t);
+}
+
+template<std::size_t I, typename... Types>
+constexpr
+Tuple_element_t<I, Tuple<Types...>>&&
+get(Tuple<Types...>&& t) noexcept
+{
+    
+}
+
+template<std::size_t I, typename... Types>
+constexpr
+const Tuple_element_t<I, Tuple<Types...>>&&
+get(const Tuple<Types...>&& t) noexcept
+{
+
+}
+
 } // namespace cyy
 
 #endif // TUPLE_H
