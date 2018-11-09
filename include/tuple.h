@@ -517,6 +517,7 @@ make_tuple(Types&&... args)
 
 // get
 namespace {
+
 template<std::size_t I, typename Head, typename... Tails>
 constexpr
 Head& get_helper(Tuple_impl<I, Head, Tails...>& t)
@@ -531,6 +532,19 @@ const Head& get_helper(const Tuple_impl<I, Head, Tails...>& t)
     return t.head();
 }
 
+template<typename Head, std::size_t I, typename... Tails>
+constexpr
+Head& get_helper2(Tuple_impl<I, Head, Tails...>& t)
+{
+    return t.head();
+}
+
+template<typename Head, std::size_t I, typename... Tails>
+constexpr
+const Head& get_helper2(const Tuple_impl<I, Head, Tails...>& t)
+{
+    return t.head();
+}
 } // unnamed namespace
 
 template<std::size_t I, typename... Types>
@@ -563,6 +577,34 @@ const Tuple_element_t<I, Tuple<Types...>>&&
 get(const Tuple<Types...>&& t) noexcept
 {
     return std::move(get<I>(t));
+}
+
+template<typename T, typename... Types>
+constexpr
+T& get(Tuple<Types...>& t) noexcept
+{
+    return get_helper2<T>(t);
+}
+
+template<typename T, typename... Types>
+constexpr
+const T& get(const Tuple<Types...>& t) noexcept
+{
+    return get_helper2<T>(t);
+}
+
+template<typename T, typename... Types>
+constexpr
+T&& get(Tuple<Types...>&& t) noexcept
+{
+    return std::move(get_helper2<T>(t));
+}
+
+template<typename T, typename... Types>
+constexpr
+const T&& get(const Tuple<Types...>&& t) noexcept
+{
+    return std::move(get_helper2<T>(t));
 }
 
 } // namespace cyy

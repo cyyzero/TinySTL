@@ -36,10 +36,32 @@ int main()
         auto t = cyy::make_tuple(1, "Foo", 3.14);
         // 基于下标的访问
         std::cout << "(" << cyy::get<0>(t) << ", " << cyy::get<1>(t)
-                << ", " << cyy::get<2>(t) << ")\n";
+                  << ", " << cyy::get<2>(t) << ")\n";
         cyy::Tuple<int> tt{1};
         std::cout << std::is_same_v<int&, decltype(cyy::get<0>(t))> << std::endl;
         std::cout << std::is_same_v<int&, decltype(cyy::get<0>(tt))> << std::endl;
         std::cout << std::is_same_v<int&&, decltype(cyy::get<0>(std::move(tt)))> << std::endl;
+    }
+    {
+        auto t = cyy::make_tuple(1, "Foo", 3.14);
+        std::cout << "("  << cyy::get<int>(t) << ", " << cyy::get<const char (&)[4]>(t)
+                  << ", " << cyy::get<double>(t) << ")\n";
+        
+        // compile error
+        // auto t1 = cyy::make_tuple(1,2,3);
+        // std::cout << cyy::get<int>(t1) << "\n";
+
+        std::cout << std::is_same_v<int&&, decltype(cyy::get<int>(std::move(t)))> << "\n";
+
+        std::cout << std::is_same_v<const int&&, decltype(cyy::get<int>(std::move(
+            static_cast<const cyy::Tuple<int, const char(&)[4], double>&>(t))))> << "\n";
+    }
+
+    {
+        struct Empty{};
+        struct Large{char a[100];};
+        // std::cout << 
+        std::cout << sizeof(cyy::Tuple<Large, Empty, Empty, Large>) << "\n";
+        std::cout << sizeof(std::tuple<Large, Empty, Empty, Large>) << "\n";
     }
 }
