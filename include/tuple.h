@@ -515,9 +515,67 @@ make_tuple(Types&&... args)
     return Tuple<typename strip_reference_wrapper<Types>::type...>(std::forward<Types>(args)...);
 }
 
-// get
-namespace {
+// forward_as_tuple
+template<typename... Types>
+constexpr
+Tuple<Types&&...> forward_as_tuple(Types&&... args) noexcept
+{
+    return Tuple<Types&&...>(std::forward<Types>(args)...);
+}
 
+// tie: Creates a tuple of lvalue references to its arguments or instances of cyy::ignore. 
+template<typename... Types>
+constexpr
+Tuple<Types&...> tie(Types&... args) noexcept
+{
+    return Tuple<Types&...>(args...);
+}
+
+// ignore,  a placeholder
+namespace
+{
+struct Ignore_t
+{
+    template<typename T>
+    const Ignore_t& operator=(const T&) const
+    {
+        return *this;
+    }
+};
+} // unnamed namespace
+
+const Ignore_t ignore{};
+
+// tuple_cat, connect Tuples to one Tuple
+
+namespace
+{
+template<typename>
+struct is_tuple_impl : public std::false_type
+{
+};
+
+template<typename... Types>
+struct is_tuple_impl<Tuple<Types...>> : public std::true_type
+{
+};
+
+template<typename T>
+struct is_tuple : is_tuple_impl<std::remove_cv_t<std::remove_reference_t<T>>>
+{
+};
+} // unnamed namespace
+
+template<typename... Tuples, typename std::enable_if_t<std::conjunction_v<std::is_tuple<Tuples>...>>>
+constexpr
+Tuple<CTypes...> tuple_cat(Tuples&& args)
+{
+    return Tuple<>
+}
+
+// get
+namespace
+{
 template<std::size_t I, typename Head, typename... Tails>
 constexpr
 Head& get_helper(Tuple_impl<I, Head, Tails...>& t)

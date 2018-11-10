@@ -4,11 +4,12 @@
 #include <string>
 #include <memory>
 #include <tuple>
+#include <map>
 #include "tuple.h"
 
 int main()
 {
-    // std::tuple
+    std::tuple
     cyy::Tuple<int, std::string, double> t1;
     // std::cout << "Value-initialized: "; print(t1);
     cyy::Tuple<int, std::string, double> t2(42, "Test", -3.14);
@@ -63,5 +64,23 @@ int main()
         // std::cout << 
         std::cout << sizeof(cyy::Tuple<Large, Empty, Empty, Large>) << "\n";
         std::cout << sizeof(std::tuple<Large, Empty, Empty, Large>) << "\n";
+    }
+
+    // test for cyy::forward_as_tuple
+    {
+        auto t1 = cyy::forward_as_tuple(10);
+        auto t2 = cyy::forward_as_tuple(20, 'a');
+    }
+
+    // test for cyy::tie
+    {
+        auto func = [] () -> cyy::Tuple<int, double, int> {
+            return cyy::make_tuple(1, 10.1, 2);
+        };
+
+        int i;
+        double d;
+        cyy::tie(i, d, cyy::ignore) = func();
+        std::cout << i << " " << d << "\n";
     }
 }
