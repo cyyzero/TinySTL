@@ -124,4 +124,19 @@ int main()
         t.get<0>() = 10;
         std::cout << cyy::get<0>(t) << "\n";
     }
+
+    // tests for swap
+    {
+        auto f = [] (auto&& t1, auto&& t2) {
+            print(t1);
+            print(t2);
+        };
+        auto t1 = cyy::make_tuple(1,2,3);
+        auto t2 = cyy::make_tuple(4,5,6);
+        std::cout << "Before exchange: \n";
+        f(t1, t2);
+        cyy::swap(t1, t2);
+        std::cout << "After exchange: \n";
+        f(t1, t2);
+    }
 }

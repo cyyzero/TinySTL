@@ -635,15 +635,23 @@ struct is_tuple : is_tuple_impl<std::remove_cv_t<std::remove_reference_t<T>>>
 {
 };
 
-// template<typename... Tuples, typename std::enable_if_t<std::conjunction_v<std::is_tuple<Tuples>...>>>
+// TODO: tuple_cat
+
+// template<typename... Tuples, typename = std::enable_if_t<std::conjunction_v<std::is_tuple<Tuples>...>>>
 // constexpr
 // Tuple<CTypes...> tuple_cat(Tuples&& args)
 // {
 //     return Tuple<>
 // }
 
-// get
+// swap
+template<typename... Args>
+void swap(Tuple<Args...>& lhs, Tuple<Args...>& rhs) noexcept(noexcept(lhs.swap(rhs)))
+{
+    lhs.swap(rhs);
+}
 
+// get
 
 template<std::size_t I, typename... Types>
 constexpr
