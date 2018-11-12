@@ -183,6 +183,36 @@ protected:
         Inherited::swap_impl(other.tail());
     }
 };
+
+// use for member function get
+template<std::size_t I, typename Head, typename... Tails>
+constexpr
+Head& get_helper(Tuple_impl<I, Head, Tails...>& t)
+{
+    return t.head();
+}
+
+template<std::size_t I, typename Head, typename... Tails>
+constexpr
+const Head& get_helper(const Tuple_impl<I, Head, Tails...>& t)
+{
+    return t.head();
+}
+
+template<typename Head, std::size_t I, typename... Tails>
+constexpr
+Head& get_helper2(Tuple_impl<I, Head, Tails...>& t)
+{
+    return t.head();
+}
+
+template<typename Head, std::size_t I, typename... Tails>
+constexpr
+const Head& get_helper2(const Tuple_impl<I, Head, Tails...>& t)
+{
+    return t.head();
+}
+
 } // unnamed namespace
 
 template<typename... Elements>
@@ -605,44 +635,15 @@ struct is_tuple : is_tuple_impl<std::remove_cv_t<std::remove_reference_t<T>>>
 {
 };
 
-template<typename... Tuples, typename std::enable_if_t<std::conjunction_v<std::is_tuple<Tuples>...>>>
-constexpr
-Tuple<CTypes...> tuple_cat(Tuples&& args)
-{
-    return Tuple<>
-}
+// template<typename... Tuples, typename std::enable_if_t<std::conjunction_v<std::is_tuple<Tuples>...>>>
+// constexpr
+// Tuple<CTypes...> tuple_cat(Tuples&& args)
+// {
+//     return Tuple<>
+// }
 
 // get
-namespace
-{
-template<std::size_t I, typename Head, typename... Tails>
-constexpr
-Head& get_helper(Tuple_impl<I, Head, Tails...>& t)
-{
-    return t.head();
-}
 
-template<std::size_t I, typename Head, typename... Tails>
-constexpr
-const Head& get_helper(const Tuple_impl<I, Head, Tails...>& t)
-{
-    return t.head();
-}
-
-template<typename Head, std::size_t I, typename... Tails>
-constexpr
-Head& get_helper2(Tuple_impl<I, Head, Tails...>& t)
-{
-    return t.head();
-}
-
-template<typename Head, std::size_t I, typename... Tails>
-constexpr
-const Head& get_helper2(const Tuple_impl<I, Head, Tails...>& t)
-{
-    return t.head();
-}
-} // unnamed namespace
 
 template<std::size_t I, typename... Types>
 constexpr

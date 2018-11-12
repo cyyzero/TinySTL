@@ -7,17 +7,17 @@
 #include <map>
 #include "tuple.h"
 
-template<typename T, std::size_t I, typename std::enable_if_t<cyy::is_tuple<T>>>
+template<typename T, std::size_t I, typename = std::enable_if_t<cyy::is_tuple<T>::value>>
 struct Tuple_printer
 {
     static void print(const T& t)
     {
         Tuple_printer<T, I-1>::print(t);
-        std::cout << ", " << cyy::get<t>;
+        std::cout << ", " << cyy::get<I>(t);
     }
 };
 
-template<typename T, typename std::enable_if_t<cyy::is_tuple<T>>>
+template<typename T>
 struct Tuple_printer<T, 0>
 {
     static void print(const T& t)
@@ -26,20 +26,31 @@ struct Tuple_printer<T, 0>
     }
 };
 
-// template<typename... Args>
-// void print
+template<typename... Args>
+void print(const cyy::Tuple<Args...>& t)
+{
+    std::cout << "(";
+    Tuple_printer<decltype(t), sizeof...(Args)-1>::print(t);
+    std::cout << ")\n";
+}
 
 int main()
 {
-    std::tuple
-    cyy::Tuple<int, std::string, double> t1;
-    // std::cout << "Value-initialized: "; print(t1);
-    cyy::Tuple<int, std::string, double> t2(42, "Test", -3.14);
-    // std::cout << "Initialized with values: "; print(t2);
-    cyy::Tuple<char, std::string, int> t3(t2);
-    // std::cout << "Implicitly converted: "; print(t3);
-    cyy::Tuple<int, double> t4(cyy::Tuple<int, double>(42, 3.14));
-    // std::cout << "Constructed from a pair"; print(t4);
+    // tests for std::tuple constructor
+    {
+        cyy::Tuple<int, std::string, double> t1;
+        std::cout << "Value-initialized: ";
+        print(t1);
+        cyy::Tuple<int, std::string, double> t2(42, "Test", -3.14);
+        std::cout << "Initialized with values: ";
+        print(t2);
+        cyy::Tuple<char, std::string, int> t3(t2);
+        std::cout << "Implicitly converted: ";
+        print(t3);
+        cyy::Tuple<int, double> t4(cyy::Tuple<int, double>(42, 3.14));
+        std::cout << "Constructed from a pair";
+        print(t4);
+    }
     {
         std::vector<int> vi{1,2,3,4};
         auto t5 = cyy::make_tuple(std::ref(vi), 10, std::string("fuck"), 10.0f, 'v');
@@ -55,6 +66,7 @@ int main()
     // cyy::Tuple<int, std::vector<int, my_alloc>, double> t5(std::allocator_arg,
     //                                                       my_alloc(2), 42, v,  -3.14);
 
+    // tests for get
     {
         auto t = cyy::make_tuple(1, "Foo", 3.14);
         // 基于下标的访问
@@ -112,5 +124,4 @@ int main()
         t.get<0>() = 10;
         std::cout << cyy::get<0>(t) << "\n";
     }
-
 }
