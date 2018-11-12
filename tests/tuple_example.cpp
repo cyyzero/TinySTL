@@ -7,6 +7,28 @@
 #include <map>
 #include "tuple.h"
 
+template<typename T, std::size_t I, typename std::enable_if_t<cyy::is_tuple<T>>>
+struct Tuple_printer
+{
+    static void print(const T& t)
+    {
+        Tuple_printer<T, I-1>::print(t);
+        std::cout << ", " << cyy::get<t>;
+    }
+};
+
+template<typename T, typename std::enable_if_t<cyy::is_tuple<T>>>
+struct Tuple_printer<T, 0>
+{
+    static void print(const T& t)
+    {
+        std::cout << cyy::get<0>(t);
+    }
+};
+
+// template<typename... Args>
+// void print
+
 int main()
 {
     std::tuple
@@ -83,4 +105,12 @@ int main()
         cyy::tie(i, d, cyy::ignore) = func();
         std::cout << i << " " << d << "\n";
     }
+
+    // test for member function get
+    {
+        auto t = cyy::make_tuple(1,2,3.3, 5);
+        t.get<0>() = 10;
+        std::cout << cyy::get<0>(t) << "\n";
+    }
+
 }

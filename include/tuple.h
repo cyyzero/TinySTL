@@ -283,6 +283,19 @@ public:
     {
         Inherited::swap_impl(other);
     }
+
+    // member function get
+    template<std::size_t I>
+    decltype(auto) get()
+    {
+        return get_helper<I>(*this);
+    }
+
+    template<std::size_t I>
+    decltype(auto) get() const
+    {
+        return get_helper<I>(*this);
+    }
 };
 
 // Specialization for 0-element tuple
@@ -369,6 +382,19 @@ public:
         swap(this->head(), other.head());
         swap(this->tail().head(), other.tail().head());
     }
+
+    // member function get
+    template<std::size_t I>
+    decltype(auto) get()
+    {
+        return get_helper<I>(*this);
+    }
+
+    template<std::size_t I>
+    decltype(auto) get() const
+    {
+        return get_helper<I>(*this);
+    }
 };
 
 // Specialization for 1-element tuple
@@ -432,6 +458,19 @@ public:
     void swap(Tuple& other)
     {
         Inherited::swap_impl(other);
+    }
+
+    // member function get
+    template<std::size_t I>
+    decltype(auto) get()
+    {
+        return get_helper<I>(*this);
+    }
+
+    template<std::size_t I>
+    decltype(auto) get() const
+    {
+        return get_helper<I>(*this);
     }
 };
 
@@ -559,12 +598,12 @@ template<typename... Types>
 struct is_tuple_impl<Tuple<Types...>> : public std::true_type
 {
 };
+} // unnamed namespace
 
 template<typename T>
 struct is_tuple : is_tuple_impl<std::remove_cv_t<std::remove_reference_t<T>>>
 {
 };
-} // unnamed namespace
 
 template<typename... Tuples, typename std::enable_if_t<std::conjunction_v<std::is_tuple<Tuples>...>>>
 constexpr
