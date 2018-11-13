@@ -713,6 +713,89 @@ const T&& get(const Tuple<Types...>&& t) noexcept
     return std::move(get_helper2<T>(t));
 }
 
+// operator = , != , < and the other
+
+template<typename T, typename U, std::size_t I, std::size_t N>
+struct Tuple_compare
+{
+    static constexpr
+    bool equal(const T& t, const U& u)
+    {
+        return cyy::get<I>(t) == cyy::get<I>(u) &&
+               Tuple_compare<T, U, I+1, N>::equal(t, u);
+    }
+
+    static constexpr
+    bool less(const T& t, const U& u)
+    {
+        return (bool)(cyy::get<I>(t) < cyy::get<I>(u)) ||
+               !(bool)(cyy::get<I>(u) < cyy::get<I>(t)) &&
+               Tuple_compare<T, U, I+1, N>::less(t, u);
+    }
+};
+
+template<typename T, typename U, std::size_t N>
+struct Tuple_compare<T, U, N, N>
+{
+    static constexpr
+    bool equal(const T& t, const U& u)
+    {
+        return true;
+    }
+
+    static constexpr
+    bool less(const T& t, const U& u)
+    {
+        return false;
+    }
+};
+
+template<typename... TTypes, typename... UTypes>
+constexpr bool operator==(const Tuple<TTypes...>& lhs,
+                          const Tuple<UTypes...>& rhs)
+{
+    static_assert(sizeof...(TTypes) == sizeof...(UTypes),
+                  "tuple object can only be compared if they have the same size.");
+    return Tuple_compare<Tuple<TTypes...>, Tuple<UTypes...>, 0, sizeof...(TTypes)>::equal(lhs, rhs);
+}
+
+template<typename... TTypes, typename... UTypes>
+constexpr bool operator!=(const Tuple<TTypes...>& lhs,
+                          const Tuple<UTypes...>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template<typename... TTypes, typename... UTypes>
+constexpr bool operator<(const Tuple<TTypes...>& lhs,
+                         const Tuple<UTypes...>& rhs)
+{
+    static_assert(sizeof...(TTypes) == sizeof...(UTypes),
+                  "tuple object can only be compared if they have the same size.");
+    return Tuple_compare<Tuple<TTypes...>, Tuple<UTypes...>, 0, sizeof...(TTypes)>::less(lhs, rhs);
+}
+
+template<typename... TTypes, typename... UTypes >
+constexpr bool operator<=(const Tuple<TTypes...>& lhs,
+                          const Tuple<UTypes...>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+template<typename... TTypes, typename... UTypes>
+constexpr bool operator>(const Tuple<TTypes...>& lhs,
+                         const Tuple<UTypes...>& rhs)
+{
+    return rhs < lhs;
+}
+
+template<typename... TTypes, typename... UTypes >
+constexpr bool operator>=(const Tuple<TTypes...>& lhs,
+                          const Tuple<UTypes...>& rhs)
+{
+    return !(lhs < rhs);
+}
+
 } // namespace cyy
 
 #endif // TUPLE_H

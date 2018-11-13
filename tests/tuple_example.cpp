@@ -5,6 +5,8 @@
 #include <memory>
 #include <tuple>
 #include <map>
+#include <cassert>
+#include <algorithm>
 #include "tuple.h"
 
 template<typename T, std::size_t I, typename = std::enable_if_t<cyy::is_tuple<T>::value>>
@@ -36,6 +38,7 @@ void print(const cyy::Tuple<Args...>& t)
 
 int main()
 {
+    // std::tuple
     // tests for std::tuple constructor
     {
         cyy::Tuple<int, std::string, double> t1;
@@ -138,5 +141,26 @@ int main()
         cyy::swap(t1, t2);
         std::cout << "After exchange: \n";
         f(t1, t2);
+    }
+
+    // tests for compare between tuples
+    {
+        std::vector<cyy::Tuple<int, std::string, float>> v;
+        v.emplace_back(2, "baz", -0.1);
+        v.emplace_back(2, "bar", 3.14);
+        v.emplace_back(1, "foo", 100.1);
+        std::sort(v.begin(), v.end());
+    
+        for(auto p: v) {
+            std::cout << "(" << cyy::get<0>(p) << ", " << cyy::get<1>(p)
+                    << ", " << cyy::get<2>(p) << ")\n";
+        }
+
+        assert((v[0] <  v[1]) == true);
+        assert((v[0] <= v[1]) == true);
+        assert((v[0] >  v[1]) == false);
+        assert((v[0] >= v[1]) == false);
+        assert((v[0] == v[1]) == false);
+        assert((v[0] != v[1]) == true);
     }
 }
