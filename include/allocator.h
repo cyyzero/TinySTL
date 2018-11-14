@@ -1,5 +1,5 @@
-#ifndef DEFAULLOC_H
-#define DEFAULLOC_H
+#ifndef ALLOCATOR_H
+#define ALLOCATOR_H
 
 #include <new>
 #include <cstddef>
@@ -21,6 +21,7 @@ public:
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
     using propagate_on_container_move_assignment = std::true_type;
+
     // constructors
     allocator() noexcept { }
 
@@ -64,7 +65,8 @@ public:
 
     size_type max_size() const
     {
-        return std::size_t(-1) / sizeof(T);
+        // only support 2's complement
+        return size_type(-1) / sizeof(value_type);
     }
 
     template<typename U, typename... Args>
@@ -110,6 +112,6 @@ class allocator<void>
 public:
     using pointer = void*;
 };
-}
+} // namespace cyy
 
-#endif
+#endif // ALLOCATOR_H
