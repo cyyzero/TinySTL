@@ -1,5 +1,5 @@
-#ifndef _ARRAY_H
-#define _ARRAY_H
+#ifndef ARRAY_H
+#define ARRAY_H
 
 #include <cstddef>
 #include <iterator>
@@ -8,38 +8,40 @@
 
 namespace cyy
 {
-
-template<typename T, std::size_t N>
-struct __array_traits
+namespace // impl
 {
-    using _type = T[N];
+template<typename T, std::size_t N>
+struct array_traits
+{
+    using type = T[N];
 
-    static constexpr T& _S_ref(const _type& t, std::size_t pos) noexcept
+    static constexpr T& ref(const type& t, std::size_t pos) noexcept
     {
         return const_cast<T&>(t[pos]);
     }
 
-    static constexpr T* _S_ptr(const _type& t) noexcept
+    static constexpr T* ptr(const type& t) noexcept
     {
         return const_cast<T*>(t);
     }
 };
 
 template<typename T>
-struct __array_traits<T, 0>
+struct array_traits<T, 0>
 {
-    struct _type { };
+    struct type { };
 
-    static constexpr T& _S_ref(const _type&, std::size_t) noexcept
+    static constexpr T& ref(const type&, std::size_t) noexcept
     {
         return *static_cast<T*>(nullptr);
     }
 
-    static constexpr T* _S_ptr(const _type&) noexcept
+    static constexpr T* ptr(const type&) noexcept
     {
         return nullptr;
     }
 };
+} // unnamed namespace
 
 template<typename T, std::size_t N>
 struct array
@@ -56,65 +58,63 @@ struct array
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    
-    using _array_type = __array_traits<T, N>;
-    typename _array_type::_type _M_elems;
+
+    using array_type = array_traits<T, N>;
+    typename array_type::type elems;
 
     // Element access
     constexpr reference at(size_type pos)
     {
         if (pos >= N)
             throw std::out_of_range("pos too large");
-        return _array_type::_S_ref(_M_elems, pos);
+        return array_type::ref(elems, pos);
     }
 
     constexpr const_reference at(size_type pos) const
     {
         if (pos >= N)
             throw std::out_of_range("pos too large");
-        return _array_type::_S_ref(_M_elems, pos);
+        return array_type::ref(elems, pos);
     }
 
     constexpr reference operator[](size_type pos) noexcept
     {
-        return _array_type::_S_ref(_M_elems, pos);
+        return array_type::ref(elems, pos);
     }
 
     constexpr const_reference operator[](size_type pos) const noexcept
     {
-        return _array_type::_S_ref(_M_elems, pos);
+        return array_type::ref(elems, pos);
     }
 
     constexpr reference front()
     {
-        return _array_type::_S_ref(_M_elems, 0);
+        return array_type::ref(elems, 0);
     }
 
     constexpr const_reference front() const
     {
-        return _array_type::_S_ref(_M_elems, 0);
+        return array_type::ref(elems, 0);
     }
 
     constexpr reference back()
     {
-        return N ? _array_type::_S_ref(_M_elems, N-1)
-                    : _array_type::_S_ref(_M_elems, 0);
+        return N ? array_type::ref(elems, N-1) : array_type::ref(elems, 0);
     }
 
     constexpr const_reference back() const
     {
-        return N ? _array_type::_S_ref(_M_elems, N-1)
-                    : _array_type::_S_ref(_M_elems, 0);
+        return N ? array_type::ref(elems, N-1) : array_type::S_ref(elems, 0);
     }
 
     constexpr pointer data() noexcept
     {
-        return _array_type::_S_ptr(_M_elems);
+        return array_type::ptr(elems);
     }
 
     constexpr const_pointer data() const noexcept
     {
-        return _array_type::_S_ptr(_M_elems);
+        return array_type::ptr(elems);
     }
 
     // Iterate
