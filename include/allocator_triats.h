@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <utility>
+#include <limits>
 
 namespace cyy
 {
@@ -96,6 +97,7 @@ ALIAS_USING_SFINAE(propagate_on_container_swap, std::false_type)
     template<T>
     using rebind_traits = allocator_traits<rebind_alloc<T>>;
 
+    // allocate_helper, use SFINAE
     template<typename Alloc2>
     struct allocate_helper
     {
@@ -117,23 +119,140 @@ ALIAS_USING_SFINAE(propagate_on_container_swap, std::false_type)
         return a.allocate(n, hint);
     }
 
-    template<typename Alloc2, typename T>
+    template<typename Alloc2, typename T, typename = std::enable_if_t<!allocate_helper<Alloc2>::type::value>>
     static pointer allocate_impl(Alloc2& a, size_type n, T)
     {
         return a.allocate(n);
     }
 
+    // allocates uninitialized storage using the allocator 
     static pointer allocate(Alloc& a, size_type n)
     {
         return a.allocate(n);
     }
 
+    /// Calls a.allocate(n, hint) if possible. If not possible (e.g. a has no two-argument member function allocate()), 
+    /// calls a.allocate(n)
     static pointer allocate(Alloc& a, size_type n, const_void_pointer hint)
     {
         return allocate_impl(a, n, hint);
     }
 
+    // Uses the allocator a to deallocate the storage referenced by p, by calling a.deallocate(p, n)
+    static void deallocate(Alloc& a, pointer p, size_type n)
+    {
+        a.deallocate
+    }
 
+    // construct_helper, use SFINAE
+    template<typename Alloc2, typename T2, typename... Args2>
+    struct construct_helper
+    {
+        template<typename Alloc3, typename = decltype(std::declval<Alloc3>().
+            construct(std::declval<T2*>(), std::declval<Args>()...))>
+        std::true_type test(int);
+
+        template<typename, typename>
+        std::false_type test(...);
+
+        using type =  decltype(test<Alloc2, T2, Args2...>(0));
+    };
+
+    template<typename T, typename... Args>
+    static std::enable_if_t<construct_helper<Alloc, T, Args...>::type::value>
+    construct_impl(Alloc& a, T* p, Args&&... args)
+    {
+        a.construct(p, std::forward<Args>(args)...);
+    }
+
+    template<typename T, typename... Args>
+    static std::enable_if_t<!construct_helper<Alloc, T, Args...>::type::value> && std::is_constructible_v<T, Args...>>
+    construct_impl(Alloc& a, T* p, Args&&... args)
+    {
+        ::new(static_cast<void*>(p)) T(std::forward<Args>(args)...);
+    }
+
+    // If possible, constructs an object of type T in allocated uninitialized storage pointed to by p, by calling
+    // a.construct(p, std::forward<Args>(args)...).
+    // If the above is not possible (e.g. a does not have the member function construct(),), then calls placement-new as
+    // ::new (static_cast<void*>(p)) T(std::forward<Args>(args)...).
+    template<typename T, typename... Args>
+    static void construct(Alloc& a, T* p, Args&&... args)
+    {
+        construct_impl(a, p, std::forward<Args>(args)...);
+    }
+
+    // destroy_helper, use SFINAE
+    template<typename Alloc2, typename T2>
+    struct destroy_helper
+    {
+        template<typename Alloc3, typename = decltype(std::declval<Alloc3>().
+            destroy(std::delval<T2*>()))>
+        static std::true_type test(int);
+
+        template<typename>
+        static std::false_type test(...);
+
+        using type = test<Alloc2>(0);
+    };
+
+    template<typename T>
+    static std::enable_if_t<destroy_helper<Alloc, T>::type::value>>
+    destroy_impl(Alloc& a, T* p)
+    {
+        a.destroy(p);
+    }
+
+    template<typename T>
+    static std::enable_if_t<!destroy_helper<Alloc, T>::type::value>
+    destroy_impl(Alloc& a, T* p)
+    {
+        p->~T();
+    }
+
+    // Calls the destructor of the object pointed to by p. If possible, does so by calling a.destroy(p). 
+    // If not possible (e.g. a does not have the member function destroy()), 
+    // then calls the destructor of *p directly, as p->~T(). 
+    template<typename T>
+    static void destroy(Alloc& a, T* p)
+    {
+        destroy_impl(a, p);
+    }
+
+    // max_size_helper, use SFINAE
+    template<typename Alloc2>
+    struct max_size_helper
+    {
+        template<typename Alloc3, typename = decltype(std::declval<Alloc2>().
+            max_size())>
+        static std::true_type test(int);
+
+        template<typename>
+        static std::false_type test(...);
+
+        using type = decltype(test<Alloc2>(0));
+    };
+
+    template<typename Alloc2, typename = std::enable_if_t<max_size_helper<Alloc2>::type::value>>
+    static size_type max_size_impl(const Alloc& a, int)
+    {
+        return a.max_size();
+    }
+
+    template<typename Alloc2, typename = std::enable_if_t<!max_size_helper<Alloc2>::type::value>>
+    static size_type max_size_impl(const Alloc& a, ...)
+    {
+        return std::numeric_limits<size_type>::max();
+    }
+
+    // If possible, obtains the maximum theoretically possible allocation size from the allocator a, by calling
+    // a.max_size()
+    // If the above is not possible (e.g. a does not have the member function max_size()), 
+    // then returns std::numeric_limits<size_type>::max() 
+    static size_type max_size(const Alloc& a)
+    {
+        return max_size_imp(a, 0);
+    }
 };
 } // namespace cyy
 #endif // ALLOCATOR_TRAITS_H
