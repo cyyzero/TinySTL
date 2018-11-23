@@ -39,7 +39,7 @@ public:
         using other = allocator<T1>;
     };
 
-    pointer allocate(size_type n, void *p = 0)
+    pointer allocate(size_type n, void *p = nullptr)
     {
         if (n > this->max_size())
         {
