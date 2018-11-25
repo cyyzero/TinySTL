@@ -1,6 +1,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include <limits>
 #include <type_traits>
 #include "allocator.h"
 #include "uninitialized.h"
@@ -331,6 +332,22 @@ public:
     {
         return const_reverse_iterator(data.start-1);
     }
+
+    bool empty() const noexcept
+    {
+        return data.start == data.finish;
+    }
+
+    size_type size() const noexcept
+    {
+        return data.finish - data.start;
+    }
+
+    size_type max_size() const noexcept
+    {
+        return std::numeric_limits<size_type>::max();
+    }
+
 
 private:
     void default_initialize(size_type count)
