@@ -1,7 +1,7 @@
 #ifndef UNINITIALIZED_H
 #define UNINITIALIZED_H
 
-#include "allocator_triats.h"
+#include "allocator_traits.h"
 
 namespace cyy
 {
