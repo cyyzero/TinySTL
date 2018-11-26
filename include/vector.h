@@ -2,10 +2,12 @@
 #define VECTOR_H
 
 #include <limits>
+#include <algorithm>
 #include <type_traits>
 #include "allocator.h"
 #include "uninitialized.h"
-#include "allocator_triats.h"
+#include "allocator_traits.h"
+#include "construct.h"
 
 namespace cyy
 {
@@ -217,26 +219,22 @@ public:
     // destruct
     ~Vector()
     {
-        // TODO: optimize for POD
-        destroy();
+        erase_at_end(data.start);
     }
 
     // assignment
     Vector& operator=(const Vector& rhs)
     {
         // TODO: handle exception and optimize time
-        size_type size = rhs.size();
+        // size_type size = rhs.size();
         if (allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value)
         {
             get_alloc_ref() = rhs.get_alloc_ref();
         }
 
         // destruct and deallocate *this
-        destroy();
-        deallocate(data.start, data.end_of_storage - data.start);
-        data.start = data.finish = data.end_of_storage = nullptr;
-        data.start = allocate(size);
-        copy_initialize(rhs);
+        Vector tmp(rhs);
+        data.swap(tmp.data);
         return *this;
     }
 
@@ -251,6 +249,7 @@ public:
             move_initialize(std::move(rhs));
             return *this;
         }
+
         Vector tmp{allocator_type()};
         data.swap(tmp.data);
         data.swap(rhs.data);
@@ -260,19 +259,42 @@ public:
 
     Vector& operator=(std::initializer_list<value_type> l)
     {
-        Vector tmp{allocator_type()};
-        data.swap(tmp.data);
-        range_initialize(l.begin(), l.end(), std::forward_iterator_tag());
+        assign(l.begin(), l.end());
         return *this;
     }
 
-    // get the number of elements 
-    size_type size() const noexcept
+    // replace the contents
+    void assign(size_type count, const value_type& value)
     {
-        return data.finish - data.start;
+        if (count > capacity())
+        {
+            Vector tmp(count, value);
+            data.swap(tmp.data);
+        }
+        else if (count > size())
+        {
+            std::fill(data.start, data.finish, value);
+            data.finish = cyy::uninitialized_fill_n_a(end(), count-size(), value, get_alloc_ref());
+        }
+        else
+        {
+            erase_at_end(std::fill_n(data.start, count, value));
+        }
     }
 
-    // 
+    template<typename InputIt>
+    void assign(InputIt first, InputIt last)
+    {
+        using Iterator_category = typename std::iterator_traits<InputIt>::iterator_category;
+        assign_aux(first, last, Iterator_category());
+    }
+
+    void assign(std::initializer_list<value_type> ilist)
+    {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    // get iterators
     iterator begin() noexcept
     {
         return iterator(data.start);
@@ -320,7 +342,7 @@ public:
 
     reverse_iterator rend() noexcept
     {
-        return reverse_iterator(data.first-1);
+        return reverse_iterator(data.start-1);
     }
 
     const_reverse_iterator rend() const noexcept
@@ -333,21 +355,60 @@ public:
         return const_reverse_iterator(data.start-1);
     }
 
+    // checks whether the container is empty
     bool empty() const noexcept
     {
         return data.start == data.finish;
     }
 
+    // returns the number of elements
     size_type size() const noexcept
     {
         return data.finish - data.start;
     }
 
+    // returns the maximum possible number of elements
     size_type max_size() const noexcept
     {
         return std::numeric_limits<size_type>::max();
     }
 
+    // returns the number of elements that can be held in currently allocated storage
+    size_type capacity() const noexcept
+    {
+        return data.end_of_storage - data.start;
+    }
+
+    // reserves storage
+    void reserve(size_type new_cap)
+    {
+        if (new_cap > max_size())
+            throw std::length_error("too large");
+
+        if (new_cap <= capacity())
+            return;
+
+        Vector tmp(new_cap);
+        tmp.move_initialize(std::move(*this));
+        data.swap(tmp.data);
+    }
+
+    // reduces memory usage by freeing unused memory
+    void shrink_to_fit()
+    {
+        if (capacity() > 2 * size())
+        {
+            Vector tmp(size());
+            tmp.move_initialize(std::move(*this));
+            data.swap(tmp.data);
+        }
+    }
+
+    // erase all eleemnts
+    void clear() noexcept
+    {
+        erase_at_end(begin());
+    }
 
 private:
     void default_initialize(size_type count)
@@ -386,14 +447,75 @@ private:
         data.finish = cyy::uninitialized_copy_a(first, last, data.start, get_alloc_ref());
     }
 
-    void destroy()
+    // allocate memory and copy elements into it
+    template<typename ForwardIterator>
+    pointer allocate_and_copy(size_type n, ForwardIterator first, ForwardIterator last)
     {
-        for (auto cur = data.start; cur != data.finish; ++cur)
+        pointer start = allocate(n);
+        try 
         {
-            allocator_traits<allocator_type>::destroy(get_alloc_ref(), std::addressof(*cur));
+            cyy::uninitialized_copy_a(first, last, start, get_alloc_ref());
+            return start;
+        }
+        catch(...)
+        {
+            deallocate(start, n);
         }
     }
 
+    // destroy elements in range of [pos, finish)
+    void erase_at_end(pointer pos) noexcept
+    {
+        cyy::Destroy(pos, data.finish, get_alloc_ref());
+        data.finish = pos;
+    }
+
+    template<typename InputIterator>
+    void assign_aux(InputIterator first, InputIterator last, std::input_iterator_tag)
+    {
+        pointer cur = data.start;
+        for (; first != last && cur != data.finish; ++cur, ++first)
+        {
+            *cur = *first;
+        }
+        if (first == last)
+        {
+            erase_at_end(cur);
+        }
+        else
+        {
+            insert(end(), first, last);
+        }
+    }
+
+    // do real assign work
+    template<typename ForwardIterator>
+    void assign_aux(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag)
+    {
+        const size_type n = std::distance(first, last);
+        if (n > capacity())
+        {
+            pointer start = allocate_and_copy(n, first, last);
+            erase_at_end(data.start);
+            deallocate(data.start, data.end_of_storage - data.start);
+            data.start = start;
+            data.finish = data.end_of_storage = start + n;
+        }
+        else if (n > size())
+        {
+            ForwardIterator mid = first;
+            std::advance(mid, n);
+            std::copy(first, mid, data.start);
+            data.finish = cyy::uninitialized_copy_a(mid, last, data.finish, get_alloc_ref());
+        }
+        else
+        {
+            // there's a better version
+            // erase_at_end(std::copy(first, last, data.start));
+            erase_at_end(data.start + n);
+            std::copy(first, last, data.start);
+        }
+    }
 };
 
 } // namespace cyy
