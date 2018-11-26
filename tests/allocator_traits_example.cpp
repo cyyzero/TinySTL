@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 #include "allocator.h"
-#include "allocator_triats.h"
+#include "allocator_traits.h"
 
 int main()
 {
