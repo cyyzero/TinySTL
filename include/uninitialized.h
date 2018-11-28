@@ -33,30 +33,27 @@ ForwardIt uninitialized_fill_n_a(ForwardIt first, Size n, const Value& value, Al
 
 // construct elements from src to dest allocated by alloc
 template<typename InputIt, typename ForwardIt, typename Alloc>
-ForwardIt uninitialized_copy_a(InputIt src_begin, InputIt src_end,
-                               ForwardIt dest_begin, Alloc& alloc)
+ForwardIt uninitialized_copy_a(InputIt first, InputIt last,
+                               ForwardIt target, Alloc& alloc)
 {
     // TODO: handle exception
-    ForwardIt cur = dest_begin;
-
-    for (; src_begin != src_end; ++src_begin, ++cur)
+    for (; first != last; ++first, ++target)
     {
-        allocator_traits<Alloc>::construct(alloc, std::addressof(*cur), *src_begin);
+        allocator_traits<Alloc>::construct(alloc, std::addressof(*target), *first);
     }
-    return cur;
+    return target;
 }
 
 template<typename InputIt, typename ForwardIt, typename Alloc>
-ForwardIt uninitialized_move_a(InputIt src_begin, InputIt src_end,
-                               ForwardIt dest_begin, Alloc& alloc)
+ForwardIt uninitialized_move_a(InputIt first, InputIt last,
+                               ForwardIt target, Alloc& alloc)
 {
     // TODO: handle excetption
-    ForwardIt cur = dest_begin;
-    for (; src_begin != src_end; ++src_begin, ++cur)
+    for (; first != last; ++first, ++target)
     {
-        allocator_traits<Alloc>::construct(alloc, std::addressof(*cur), std::move(*cur));
+        allocator_traits<Alloc>::construct(alloc, std::addressof(*target), std::move(*first));
     }
-    return cur;
+    return target;
 }
 
 }
