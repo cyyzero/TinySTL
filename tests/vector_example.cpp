@@ -132,4 +132,29 @@ int main()
             std::cout << c << '\n';
         } 
     }
+
+    std::cout << "\nTests for operator[]\n";
+    {
+    Vector<int> numbers {2, 4, 6, 8};
+ 
+    std::cout << "Second element: " << numbers[1] << '\n';
+ 
+    numbers[0] = 5;
+ 
+    std::cout << "All numbers:";
+    for (auto i : numbers) {
+        std::cout << ' ' << i;
+    }
+    std::cout << '\n';
+    }
+
+    std::cout << "\nTests for front and back\n";
+    {
+        Vector<char> letters {'o', 'm', 'g', 'w', 't', 'f'};
+ 
+        if (!letters.empty()) {
+            std::cout << "The first character is: " << letters.front() << '\n';
+            std::cout << "The last  character is: " << letters.back()  << '\n';
+        }
+    }
 }
