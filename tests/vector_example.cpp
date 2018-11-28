@@ -1,6 +1,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <iomanip>
 #include <iostream>
 #include "vector.h"
  
@@ -156,5 +157,90 @@ int main()
             std::cout << "The first character is: " << letters.front() << '\n';
             std::cout << "The last  character is: " << letters.back()  << '\n';
         }
+    }
+
+    std::cout << "\nTests for erase()\n";
+    {
+        Vector<int> c{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        for (auto &i : c) {
+            std::cout << i << " ";
+        }
+        std::cout << '\n';
+    
+        c.erase(c.begin());
+    
+        for (auto &i : c) {
+            std::cout << i << " ";
+        }
+        std::cout << '\n';
+    
+        c.erase(c.begin()+2, c.begin()+5);
+    
+        for (auto &i : c) {
+            std::cout << i << " ";
+        }
+        std::cout << '\n';
+    
+        // Erase all even numbers (C++11 and later)
+        for (auto it = c.begin(); it != c.end(); ) {
+            if (*it % 2 == 0) {
+                it = c.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    
+        for (auto &i : c) {
+            std::cout << i << " ";
+        }
+        std::cout << '\n';
+    }
+
+    std::cout << "\nTests for push_back()\n";
+    {
+        Vector<std::string> numbers;
+        std::cout << numbers.size() << " " << numbers.capacity() << std::endl;
+ 
+        numbers.push_back("abc");
+        std::cout << numbers.size() << " " << numbers.capacity() << std::endl;
+        std::string s = "def";
+        numbers.push_back(std::move(s));
+        std::cout << numbers.size() << " " << numbers.capacity() << std::endl;
+    
+        std::cout << "vector holds: ";
+        for (auto&& i : numbers) std::cout << std::quoted(i) << ' ';
+        std::cout << "\nMoved-from string holds " << std::quoted(s) << '\n';
+    }
+
+    std::cout << "\nTests for pop_back()\n";
+    {
+        Vector<int> numbers;
+
+        numbers.push_back(5);
+        for (auto i : numbers)
+        {
+            std::cout << i << " ";
+        }
+        std::cout << "\n";
+
+        numbers.push_back(3);
+        for (auto i : numbers)
+        {
+            std::cout << i << " ";
+        }
+        std::cout << "\n";
+
+        numbers.push_back(4);
+
+        for (auto i : numbers)
+        {
+            std::cout << i << " ";
+        }
+        std::cout << "\n";
+    
+        numbers.pop_back();
+        for (auto i : numbers)
+            std::cout << i << " ";
+        std::cout << "\n";
     }
 }

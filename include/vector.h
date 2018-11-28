@@ -484,6 +484,65 @@ public:
         erase_at_end(data_impl.start);
     }
 
+    iterator insert(const_iterator pos, const value_type& value)
+    {
+        if (size() == capacity())
+        {
+            size_type n = size() * 2;
+            pointer* p = allocate_and_copy(n, begin(), end());
+
+        }
+        else
+        {
+            *data_impl.finish++ = *value;
+        }
+    }
+
+    iterator insert(const_iterator pos, value_type&& value)
+    {
+
+    }
+
+    // removes the element at pos
+    iterator erase(iterator pos)
+    {
+        return erase_at_pos(pos+1, end(), pos);
+    }
+
+    // removes the elements in the range [first, last)
+    iterator erase(iterator first, iterator last)
+    {
+        return erase_at_pos(last, end(), first);
+    }
+
+    // Appends the given element value to the end of the container
+
+    /// The new element is initialized as a copy of value.
+    void push_back(const T& value)
+    {
+        if (data_impl.finish == data_impl.end_of_storage)
+        {
+            expand();
+        }
+        cyy::allocator_traits<allocator_type>::construct(get_alloc_ref(), data_impl.finish++, value);
+    }
+
+    /// value is moved into the new element.
+    void push_back(T&& value)
+    {
+        if (data_impl.finish == data_impl.end_of_storage)
+        {
+            expand();
+        }
+        cyy::allocator_traits<allocator_type>::construct(get_alloc_ref(), data_impl.finish++, std::move(value));
+    }
+
+    // removes the last element
+    void pop_back()
+    {
+        cyy::allocator_traits<allocator_type>::destroy(get_alloc_ref(), data_impl.finish--);
+    }
+
 private:
     void default_initialize(size_type count)
     {
@@ -588,6 +647,41 @@ private:
             // there's a better version
             erase_at_end(std::copy(first, last, data_impl.start));
         }
+    }
+
+    iterator erase_at_pos(iterator first, iterator last, iterator target)
+    {
+        iterator dest = target;
+        for (; first != last; ++first, ++target)
+        {
+            *target = std::move(*first);
+        }
+        pointer p = std::addressof(*target);
+        erase_at_end(p);
+        return dest;
+    }
+
+    void expand()
+    {
+        size_type n = capacity();
+        size_type alloc_n = (n == 0) ? 1 : n*2;
+        pointer start = allocate(alloc_n);
+
+        try
+        {
+            cyy::uninitialized_move_a(begin(), end(), start, get_alloc_ref());
+        }
+        catch (...)
+        {
+            deallocate(start, alloc_n);
+            throw;
+        }
+
+        cyy::Destroy(begin(), end());
+        deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
+        data_impl.start = start;
+        data_impl.finish = start+n;
+        data_impl.end_of_storage = start + alloc_n;
     }
 };
 
