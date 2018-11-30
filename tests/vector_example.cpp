@@ -116,7 +116,7 @@ int main()
         cyy::Vector<int> v;
         std::cout << "Default-constructed capacity is " << v.capacity() << '\n';
         // TODO: implemation resize
-        // v.resize(100);
+        v.resize(100);
         std::cout << "Capacity of a 100-element vector is " << v.capacity() << '\n';
         v.clear();
         std::cout << "Capacity after clear() is " << v.capacity() << '\n';
@@ -270,5 +270,21 @@ int main()
         std::cout << "\nv2: ";
         printVector(v2);
         std::cout << "\n";
+    }
+
+    std::cout << "\nTest for resize()\n";
+    {
+        Vector<int> c = {1, 2, 3};
+        std::cout << "The vector holds: ";
+        for(auto& el: c) std::cout << el << ' ';
+        std::cout << '\n';
+        c.resize(5);
+        std::cout << "After resize up 5: ";
+        for(auto& el: c) std::cout << el << ' ';
+        std::cout << '\n';
+        c.resize(2);
+        std::cout << "After resize down to 2: ";
+        for(auto& el: c) std::cout << el << ' ';
+        std::cout << '\n';
     }
 }

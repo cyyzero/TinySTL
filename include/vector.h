@@ -141,8 +141,8 @@ class Vector
     using Base::deallocate;
     using Base::data_impl;
     using Base::get_alloc_ref;
-    using allocator_traits = typename Base::allocator_traits;ls
-    
+    using allocator_traits = typename Base::allocator_traits;
+
 
 public:
     using value_type             = T;
@@ -546,6 +546,66 @@ public:
     void pop_back()
     {
         allocator_traits::destroy(get_alloc_ref(), data_impl.finish--);
+    }
+
+    void resize(size_type count)
+    {
+        if (count > capacity())
+        {
+            size_type orignal_size = size();
+            pointer start = allocate_and_copy(count, begin(), end());
+            erase_at_end(data_impl.start);
+            deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
+            data_impl.start = start;
+            data_impl.finish = start + orignal_size;
+            data_impl.end_of_storage = start + count;
+            for (size_type i = 0; i < count - orignal_size; ++i, ++data_impl.finish)
+            {
+                allocator_traits::construct(get_alloc_ref(), data_impl.finish);
+            }
+        }
+        else if (count > size())
+        {
+            size_type append_size = count - size();
+            for (size_type i = 0; i < append_size; ++i, ++data_impl.finish)
+            {
+                allocator_traits::construct(get_alloc_ref(), data_impl.finish);
+            }
+        }
+        else
+        {
+            erase_at_end(data_impl.start + count);
+        }
+    }
+
+    void resize(size_type count, const value_type& value)
+    {
+        if (count > capacity())
+        {
+            size_type orignal_size = size();
+            pointer start = allocate_and_copy(count, begin(), end());
+            erase_at_end(data_impl.start);
+            deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
+            data_impl.start = start;
+            data_impl.finish = start + orignal_size;
+            data_impl.end_of_storage = start + count;
+            for (size_type i = 0; i < count - orignal_size; ++i, ++data_impl.finish)
+            {
+                allocator_traits::construct(get_alloc_ref(), data_impl.finish, value);
+            }
+        }
+        else if (count > size())
+        {
+            size_type append_size = count - size();
+            for (size_type i = 0; i < append_size; ++i, ++data_impl.finish)
+            {
+                allocator_traits::construct(get_alloc_ref(), data_impl.finish, value);
+            }
+        }
+        else
+        {
+            erase_at_end(data_impl.start + count);
+        }
     }
 
     // exchange contents
