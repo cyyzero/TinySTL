@@ -11,6 +11,8 @@
 
 namespace cyy
 {
+
+// Base class for Vector, used for allocating
 template<typename T, typename Alloc>
 class Vector_base
 {
@@ -18,8 +20,9 @@ class Vector_base
                   "Allocator::value_type and T must be the same type.");
 
 public:
-    using pointer        = typename allocator_traits<Alloc>::pointer;
-    using allocator_type = Alloc;
+    using allocator_type   = Alloc;
+    using allocator_traits = cyy::allocator_traits<Alloc>;
+    using pointer          = typename allocator_traits::pointer;
 
 protected:
     struct Vector_data
@@ -94,13 +97,13 @@ protected:
 
     pointer allocate(std::size_t n)
     {
-        return n != 0 ? allocator_traits<Alloc>::allocate(static_cast<allocator_type&>(data_impl), n) : pointer();
+        return n != 0 ? allocator_traits::allocate(static_cast<allocator_type&>(data_impl), n) : pointer();
     }
 
     void deallocate(pointer p, std::size_t n)
     {
         if (p)
-            allocator_traits<Alloc>::deallocate(static_cast<allocator_type&>(data_impl), p, n);
+            allocator_traits::deallocate(static_cast<allocator_type&>(data_impl), p, n);
     }
 
     allocator_type& get_alloc_ref() noexcept
@@ -138,6 +141,8 @@ class Vector
     using Base::deallocate;
     using Base::data_impl;
     using Base::get_alloc_ref;
+    using allocator_traits = typename Base::allocator_traits;ls
+    
 
 public:
     using value_type             = T;
@@ -146,8 +151,8 @@ public:
     using difference_type        = std::ptrdiff_t;
     using reference              = value_type&;
     using const_reference        = const value_type&;
-    using pointer                = typename cyy::allocator_traits<Alloc>::pointer;
-    using const_pointer          = typename cyy::allocator_traits<Alloc>::const_pointer;
+    using pointer                = typename allocator_traits::pointer;
+    using const_pointer          = typename allocator_traits::const_pointer;
     using iterator               = T*;
     using const_iterator         = const T*;
     using reverse_iterator       = std::reverse_iterator<iterator>;
@@ -227,7 +232,7 @@ public:
     {
         // TODO: handle exception and optimize time
         // size_type size = rhs.size();
-        if (allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value)
+        if (allocator_traits::propagate_on_container_copy_assignment::value)
         {
             get_alloc_ref() = rhs.get_alloc_ref();
         }
@@ -240,7 +245,7 @@ public:
 
     Vector& operator=(Vector&& rhs)
     {
-        if (allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value)
+        if (allocator_traits::propagate_on_container_copy_assignment::value)
         {
             get_alloc_ref() = std::move(rhs.get_alloc_ref());
         }
@@ -524,7 +529,7 @@ public:
         {
             expand();
         }
-        cyy::allocator_traits<allocator_type>::construct(get_alloc_ref(), data_impl.finish++, value);
+        allocator_traits::construct(get_alloc_ref(), data_impl.finish++, value);
     }
 
     /// value is moved into the new element.
@@ -534,13 +539,21 @@ public:
         {
             expand();
         }
-        cyy::allocator_traits<allocator_type>::construct(get_alloc_ref(), data_impl.finish++, std::move(value));
+        allocator_traits::construct(get_alloc_ref(), data_impl.finish++, std::move(value));
     }
 
     // removes the last element
     void pop_back()
     {
-        cyy::allocator_traits<allocator_type>::destroy(get_alloc_ref(), data_impl.finish--);
+        allocator_traits::destroy(get_alloc_ref(), data_impl.finish--);
+    }
+
+    // exchange contents
+    void swap(Vector& other)
+    {
+        if (allocator_traits::propagate_on_container_swap::value)
+            std::swap(get_alloc_ref(), other.get_alloc_ref());
+        data_impl.swap(other.data_impl);
     }
 
 private:
