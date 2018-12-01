@@ -457,7 +457,7 @@ public:
         return data_impl.end_of_storage - data_impl.start;
     }
 
-    // reserves storage
+    // reserves storage 
     void reserve(size_type new_cap)
     {
         if (new_cap > max_size())
@@ -491,21 +491,28 @@ public:
 
     iterator insert(const_iterator pos, const value_type& value)
     {
-        if (size() == capacity())
-        {
-            size_type n = size() * 2;
-            pointer* p = allocate_and_copy(n, begin(), end());
-
-        }
-        else
-        {
-            *data_impl.finish++ = *value;
-        }
+        return insert_at_pos(pos, value);
     }
 
     iterator insert(const_iterator pos, value_type&& value)
     {
+        return insert_at_pos(pos, std::move(value));
+    }
 
+    iterator insert(const_iterator pos, size_type count, const T& value)
+    {
+
+    }
+
+    template<typename InputIterator>
+    iterator insert(const_iterator pos, InputIterator first, InputIterator last)
+    {
+
+    }
+
+    iterator insert(const_iterator pos, std::initializer_list<value_type> ilist)
+    {
+        return insert(pos, ilist.begin(), ilist.end());
     }
 
     // removes the element at pos
@@ -755,6 +762,27 @@ private:
         data_impl.start = start;
         data_impl.finish = start+n;
         data_impl.end_of_storage = start + alloc_n;
+    }
+
+    template<typename V>
+    iterator insert_at_pos(const_iterator pos, V&& value)
+    {
+        // equal to size() == capacity()
+        if (data_impl.end_of_storage == data_impl.finish)
+        {
+            size_type dist = std::distance(cbegin(), pos);
+            expand();
+            pos = cbegin() + dist;
+        }
+        allocator_traits::construct(get_alloc_ref(), data_impl.finish, std::move(*(data_impl.finish-1)));
+        ++data_impl.finish;
+        iterator cur;
+        for (cur = end()-2; cur != pos; --cur)
+        {
+            *cur = std::move(*(cur-1));
+        }
+        *cur = std::forward<V>(value);
+        return cur;
     }
 };
 

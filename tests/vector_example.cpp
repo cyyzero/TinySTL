@@ -287,4 +287,20 @@ int main()
         for(auto& el: c) std::cout << el << ' ';
         std::cout << '\n';
     }
+
+    std::cout << "\nTests for insert()\n";
+    {
+        Vector<std::string> v{"Helo", "asf", "aaa"};
+        std::string l("lvalue test");
+        std::string r("rvalue test");
+        v.insert(v.begin(), l);
+        v.insert(v.begin(), std::move(r));
+        
+        for (const auto& s: v)
+        {
+            std::cout << s << std::endl;
+        }
+        std::cout << "afer move l: " << l << std::endl;
+        std::cout << "afer move r: " << r << std::endl;
+    }
 }
