@@ -294,7 +294,9 @@ int main()
         std::string l("lvalue test");
         std::string r("rvalue test");
         v.insert(v.begin(), l);
+        std::cout << "size: " << v.size() << "\n";
         v.insert(v.begin(), std::move(r));
+        std::cout << "size: " << v.size() << "\n";
         
         for (const auto& s: v)
         {

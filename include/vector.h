@@ -771,18 +771,38 @@ private:
         if (data_impl.end_of_storage == data_impl.finish)
         {
             size_type dist = std::distance(cbegin(), pos);
-            expand();
-            pos = cbegin() + dist;
+            size_type orignal_size = size();
+            pointer start = allocate(2*orignal_size);
+            try
+            {
+                cyy::uninitialized_move_a(data_impl.start, data_impl.start + dist, start, get_alloc_ref());
+                allocator_traits::construct(get_alloc_ref(), start+dist, std::forward<V>(value));
+                cyy::uninitialized_move_a(data_impl.start+dist, data_impl.finish, start+dist+1, get_alloc_ref());
+            }
+            catch (...)
+            {
+                deallocate(start, 2*orignal_size);
+                throw;
+            }
+            erase_at_end(data_impl.start);
+            deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
+            data_impl.start = start;
+            data_impl.finish = start + orignal_size;
+            data_impl.end_of_storage = start + 2 * orignal_size;
+            return start + dist;
         }
-        allocator_traits::construct(get_alloc_ref(), data_impl.finish, std::move(*(data_impl.finish-1)));
-        ++data_impl.finish;
-        iterator cur;
-        for (cur = end()-2; cur != pos; --cur)
+        else
         {
-            *cur = std::move(*(cur-1));
+            allocator_traits::construct(get_alloc_ref(), data_impl.finish, std::move(*(data_impl.finish-1)));
+            ++data_impl.finish;
+            iterator cur;
+            for (cur = end()-2; cur != pos; --cur)
+            {
+                *cur = std::move(*(cur-1));
+            }
+            *cur = std::forward<V>(value);
+            return cur;
         }
-        *cur = std::forward<V>(value);
-        return cur;
     }
 };
 
