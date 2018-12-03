@@ -501,7 +501,47 @@ public:
 
     iterator insert(const_iterator pos, size_type count, const T& value)
     {
+        size_type rest_size = data_impl.end_of_storage - data_impl.finish;
+        if (rest_size < count)
+        {
+            size_type orignal_size, orignal_capacity, dist;
+            pointer cur, start;
 
+            orignal_size = size();
+            orignal_capacity = capacity();
+            dist = pos - data_impl.start;
+
+            start = allocate(orignal_size + count);
+            try
+            {
+                cur = cyy::uninitialized_move_a(data_impl.start, pos, start, get_alloc_ref());
+                cur = cyy::uninitialized_fill_n_a(cur, count, value, get_alloc_ref());
+                cur = cyy::uninitialized_move_a(pos, data_impl.finish, cur, get_alloc_ref());
+            }
+            catch (...)
+            {
+                deallocate(start, orignal_size + count);
+                throw;
+            }
+
+            erase_at_end(data_impl.start);
+            deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
+            data_impl.start = start;
+            data_impl.finish = cur;
+            data_impl.end_of_storage = cur;
+        }
+        else
+        {
+            if (pos + count <= data_impl.finish)
+            {
+                pointer cur;
+                cyy::uninitialized_move_a(data_impl.finish-count, data_impl.finish, data_impl.finish, get_alloc_ref());
+            }
+            else
+            {
+
+            }
+        }
     }
 
     template<typename InputIterator>
