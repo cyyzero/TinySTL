@@ -489,16 +489,19 @@ public:
         erase_at_end(data_impl.start);
     }
 
+    // insert lvalue before pos
     iterator insert(const_iterator pos, const value_type& value)
     {
         return insert_at_pos(pos, value);
     }
 
+    // insert rvalue before pos
     iterator insert(const_iterator pos, value_type&& value)
     {
         return insert_at_pos(pos, std::move(value));
     }
 
+    // inserts count copies of the value before pos
     iterator insert(const_iterator pos, size_type count, const value_type& value)
     {
         size_type dist = pos - data_impl.start;
@@ -506,6 +509,7 @@ public:
         return begin() + dist;
     }
 
+    // inserts elements from range [first, last) before pos
     template<typename InputIterator, typename = std::enable_if_t<!std::is_integral_v<InputIterator>>>
     iterator insert(const_iterator pos, InputIterator first, InputIterator last)
     {
@@ -514,9 +518,24 @@ public:
         return begin() + dist;
     }
 
+    // inserts elements from initializer list ilist before pos
     iterator insert(const_iterator pos, std::initializer_list<value_type> ilist)
     {
         return insert(pos, ilist.begin(), ilist.end());
+    }
+
+    // constructs element in-place
+    template<typename... Args>
+    iterator emplace(const_iterator pos, Args&&... args)
+    {
+        return insert_at_pos(pos, std::forward<Args>(args)...);
+    }
+
+    // constructs an element in-place at the end
+    template<typename... Args>
+    void emplace_back(Args&&... args)
+    {
+        insert_at_pos(cend(), std::forward<Args>(args)...);
     }
 
     // removes the element at pos
@@ -559,6 +578,7 @@ public:
         allocator_traits::destroy(get_alloc_ref(), data_impl.finish--);
     }
 
+    // changes the number of elements stored
     void resize(size_type count)
     {
         if (count > capacity())
@@ -768,31 +788,32 @@ private:
         data_impl.end_of_storage = start + alloc_n;
     }
 
-    template<typename Value>
-    iterator insert_at_pos(const_iterator pos, Value&& value)
+    template<typename... Args>
+    iterator insert_at_pos(const_iterator pos, Args&&... args)
     {
         // equal to size() == capacity()
         if (data_impl.end_of_storage == data_impl.finish)
         {
             size_type dist = std::distance(cbegin(), pos);
             size_type orignal_size = size();
-            pointer start = allocate(2*orignal_size);
+            size_type alloc_size = (orignal_size == 0) ? 1 : 2 * orignal_size;
+            pointer start = allocate(alloc_size);
             try
             {
                 cyy::uninitialized_move_a(data_impl.start, data_impl.start + dist, start, get_alloc_ref());
-                allocator_traits::construct(get_alloc_ref(), start+dist, std::forward<Value>(value));
+                allocator_traits::construct(get_alloc_ref(), start+dist, std::forward<Args>(args)...);
                 cyy::uninitialized_move_a(data_impl.start+dist, data_impl.finish, start+dist+1, get_alloc_ref());
             }
             catch (...)
             {
-                deallocate(start, 2*orignal_size);
+                deallocate(start, alloc_size);
                 throw;
             }
             erase_at_end(data_impl.start);
             deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
             data_impl.start = start;
             data_impl.finish = start + orignal_size + 1;
-            data_impl.end_of_storage = start + 2 * orignal_size;
+            data_impl.end_of_storage = start + alloc_size;
             return start + dist;
         }
         else
@@ -804,7 +825,7 @@ private:
             {
                 *cur = std::move(*(cur-1));
             }
-            *cur = std::forward<Value>(value);
+            *cur = value_type(std::forward<Args>(args)...);
             return cur;
         }
     }
@@ -869,7 +890,6 @@ private:
             pointer start, cur;
             size_type orignal_capacity = capacity();
             start = allocate(orignal_capacity + count);
-            printf("%p alloc\n", (void*)this);
             try
             {
                 cur = cyy::uninitialized_move_a(data_impl.start, pos, start, get_alloc_ref());
