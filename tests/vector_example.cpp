@@ -377,4 +377,28 @@ int main()
                     << president.country << " in " << president.year << ".\n";
         }
     }
+
+    std::cout << "\ntests for operator==/!= ...etc and swap\n";
+    {
+        Vector<std::string> v1{"abc", "dec", "daf"};
+        Vector<std::string> v2 {"fuck"};
+        std::cout << std::boolalpha
+            << "operator ==: " << (v1 == v2) << "\n"
+            << "operator !=: " << (v1 != v2) << "\n"
+            << "operator < : " << (v1 <  v2) << "\n"
+            << "operator <=: " << (v1 <= v2) << "\n"
+            << "operator > : " << (v1 >  v2) << "\n"
+            << "operator >=: " << (v1 >= v2) << "\n";
+
+        cyy::swap(v1, v2);
+        std::cout << "v1: ";
+        for (const auto& e: v1)
+            std::cout << e << " ";
+        std::cout << "\n";
+
+        std::cout << "v2: ";
+        for (const auto& e: v2)
+            std::cout << e << " ";
+        std::cout << "\n";
+    }
 }

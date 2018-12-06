@@ -927,7 +927,57 @@ private:
             data_impl.finish = data_impl.finish + count;
         }
     }
-};
+}; // class Vector
+
+// lexicographically compares the values in the vector 
+/// return true if all elements are equal, false otherwise
+template<typename T, typename Allocator>
+inline bool operator==(const Vector<T, Allocator>& lhs, const Vector<T, Allocator>& rhs)
+{
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+/// base on operator==
+template<typename T, typename Allocator>
+inline bool operator!=(const Vector<T, Allocator>& lhs, const Vector<T, Allocator>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+/// return true if all eleemnts of the lhs are lexicographically less than those of rhs, false otherwise
+template<typename T, typename Allocator>
+inline bool operator<(const Vector<T, Allocator>& lhs, const Vector<T, Allocator>& rhs)
+{
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+/// base on operator<
+template<typename T, typename Allocator>
+inline bool operator>(const Vector<T, Allocator>& lhs, const Vector<T, Allocator>& rhs)
+{
+    return rhs < lhs;
+}
+
+/// base on operator<
+template<typename T, typename Allocator>
+inline bool operator<=(const Vector<T, Allocator>& lhs, const Vector<T, Allocator>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+/// base on operator<
+template<typename T, typename Allocator>
+inline bool operator>=(const Vector<T, Allocator>& lhs, const Vector<T, Allocator>& rhs)
+{
+    return !(lhs < rhs);
+}
+
+// swap Vector
+template<typename T, typename Allocator>
+inline void swap(Vector<T, Allocator>& x, Vector<T, Allocator>& y)
+{
+    x.swap(y);
+}
 
 } // namespace cyy
 #endif // !VECTOR_H
