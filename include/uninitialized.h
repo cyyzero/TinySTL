@@ -2,58 +2,109 @@
 #define UNINITIALIZED_H
 
 #include "allocator_traits.h"
+#include "construct.h"
 
 namespace cyy
 {
 // construct n elements starting with first allocated by alloc
-template<typename ForwardIt, typename Size, typename Alloc>
-ForwardIt uninitialized_default_n_a(ForwardIt first, Size n, Alloc& alloc)
+template<typename ForwardIterator, typename Size, typename Allocator>
+ForwardIterator uninitialized_default_n_a(ForwardIterator first, Size n, Allocator& alloc)
 {
-    // TODO: handle exception
-    ForwardIt cur = first;
-    for (; n > 0; --n, ++cur)
+    ForwardIterator cur = first;
+    try
     {
-        allocator_traits<Alloc>::construct(alloc, std::addressof(*cur));
+        for (; n > 0; --n, ++cur)
+        {
+            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur));
+        }
+        return cur;
     }
-    return cur;
+    catch (...)
+    {
+        cyy::Destroy(first, cur, alloc);
+        throw;
+    }
 }
 
 // construct n elements starting with first allocated by alloc
-template<typename ForwardIt, typename Size, typename Value, typename Alloc>
-ForwardIt uninitialized_fill_n_a(ForwardIt first, Size n, const Value& value, Alloc& alloc)
+template<typename ForwardIterator, typename Size, typename Value, typename Allocator>
+ForwardIterator uninitialized_fill_n_a(ForwardIterator first, Size n, const Value& value, Allocator& alloc)
 {
-    // TODO: handle exception
-    ForwardIt cur = first;
-    for (; n >0; --n, ++cur)
+    ForwardIterator cur = first;
+    try
     {
-        allocator_traits<Alloc>::construct(alloc, std::addressof(*cur), value);
+        for (; n > 0; --n, ++cur)
+        {
+            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), value);
+        }
+        return cur;
     }
-    return cur;
+    catch (...)
+    {
+        cyy::Destroy(first, cur, alloc);
+        throw;
+    }
+}
+
+// construct value from first to last via Allocator
+template<typename ForwardIterator, typename Value, typename Allocator>
+void uninitialized_fill_a(ForwardIterator first, ForwardIterator last, const Value& value, Allocator& alloc)
+{
+    ForwardIterator cur = first;
+    try
+    {
+        for (; cur != last; ++cur)
+        {
+            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), value);
+        }
+    }
+    catch (...)
+    {
+        cyy::Destroy(first, cur, alloc);
+        throw;
+    }
 }
 
 // construct elements from src to dest allocated by alloc
-template<typename InputIt, typename ForwardIt, typename Alloc>
-ForwardIt uninitialized_copy_a(InputIt first, InputIt last,
-                               ForwardIt target, Alloc& alloc)
+template<typename InputIterator, typename ForwardIterator, typename Allocator>
+ForwardIterator uninitialized_copy_a(InputIterator first, InputIterator last,
+                                     ForwardIterator target, Allocator& alloc)
 {
-    // TODO: handle exception
-    for (; first != last; ++first, ++target)
+    ForwardIterator cur = target;
+    try
     {
-        allocator_traits<Alloc>::construct(alloc, std::addressof(*target), *first);
+        for (; first != last; ++first, ++cur)
+        {
+            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), *first);
+        }
+        return cur;
     }
-    return target;
+    catch (...)
+    {
+        cyy::Destroy(target, cur, alloc);
+        throw;
+    }
 }
 
-template<typename InputIt, typename ForwardIt, typename Alloc>
-ForwardIt uninitialized_move_a(InputIt first, InputIt last,
-                               ForwardIt target, Alloc& alloc)
+template<typename InputIterator, typename ForwardIterator, typename Allocator>
+ForwardIterator uninitialized_move_a(InputIterator first, InputIterator last,
+                                     ForwardIterator target, Allocator& alloc)
 {
-    // TODO: handle excetption
-    for (; first != last; ++first, ++target)
+
+    ForwardIterator cur = target;
+    try
     {
-        allocator_traits<Alloc>::construct(alloc, std::addressof(*target), std::move(*first));
+        for (; first != last; ++first, ++cur)
+        {
+            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), std::move(*first));
+        }
+        return cur;
     }
-    return target;
+    catch (...)
+    {
+        cyy::Destroy(target, cur, alloc);
+        throw;
+    }
 }
 
 }
