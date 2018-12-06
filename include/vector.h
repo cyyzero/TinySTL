@@ -169,7 +169,7 @@ public:
     {
     }
 
-    explicit Vector(size_type count, const T& value, const allocator_type& alloc = Alloc())
+    explicit Vector(size_type count, const value_type& value, const allocator_type& alloc = Alloc())
         : Base(count, alloc)
     {
         fill_initialize(count, value);
@@ -214,11 +214,11 @@ public:
         range_initialize(l.begin(), l.end(), std::forward_iterator_tag());
     }
 
-    template<typename InputIt>
-    Vector(InputIt first, InputIt last, const allocator_type& alloc = allocator_type())
+    template<typename InputIterator, typename = std::enable_if_t<!std::is_integral_v<InputIterator>>>
+    Vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
         : Base(std::distance(first, last), alloc)
     {
-        range_initialize(first, last, typename std::iterator_traits<InputIt>::iterator_category());
+        range_initialize(first, last, typename std::iterator_traits<InputIterator>::iterator_category());
     }
 
     // destruct
@@ -483,7 +483,7 @@ public:
     }
 
 
-    // erase all eleemnts
+    // erase all elements
     void clear() noexcept
     {
         erase_at_end(data_impl.start);
@@ -501,105 +501,17 @@ public:
 
     iterator insert(const_iterator pos, size_type count, const value_type& value)
     {
-        const_pointer insert_end = pos + count;
-
-        if (insert_end > data_impl.end_of_storage)
-        {
-            size_type orignal_size, orignal_capacity, dist;
-            pointer cur, start;
-
-            orignal_size = size();
-            orignal_capacity = capacity();
-            dist = pos - data_impl.start;
-
-            start = allocate(orignal_size + count);
-            try
-            {
-                cur = cyy::uninitialized_move_a(data_impl.start, pos, start, get_alloc_ref());
-                cur = cyy::uninitialized_fill_n_a(cur, count, value, get_alloc_ref());
-                cur = cyy::uninitialized_move_a(pos, data_impl.finish, cur, get_alloc_ref());
-            }
-            catch (...)
-            {
-                deallocate(start, orignal_size + count);
-                throw;
-            }
-
-            erase_at_end(data_impl.start);
-            deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
-            data_impl.start = start;
-            data_impl.finish = cur;
-            data_impl.end_of_storage = cur;
-            return start + dist;
-        }
-        else
-        {
-            if (insert_end > data_impl.finish)
-            {
-                cyy::uninitialized_move_a(pos, data_impl.finish, insert_end, get_alloc_ref());
-                std::fill_n(pos, data_impl.finish - pos, value);
-                cyy::uninitialized_fill_n_a(data_impl.finish, insert_end, value, get_alloc_ref());
-            }
-            else
-            {
-                cyy::uninitialized_move_a(data_impl.finish-count, data_impl.finish,
-                                          data_impl.finish, get_alloc_ref());
-                std::copy(pos, data_impl.finish - count, insert_end);
-                std::fill_n(pos, count, value);
-            }
-            data_impl.finish = data_impl.finish + count;
-            return pos;
-        }
+        size_type dist = pos - data_impl.start;
+        insert_n(data_impl.start + dist, count, value);
+        return begin() + dist;
     }
 
-    template<typename InputIterator>
+    template<typename InputIterator, typename = std::enable_if_t<!std::is_integral_v<InputIterator>>>
     iterator insert(const_iterator pos, InputIterator first, InputIterator last)
     {
-        const size_type dist  = pos - data_impl.start;
-        const size_type count = std::distance(first, last);
-        const_pointer insert_end = pos + count;
-
-        if (insert_end > data_impl.end_of_storage)
-        {
-            pointer start, cur;
-            start = allocate(pos + count);
-            try
-            {
-                cur = cyy::uninitialized_move_a(data_impl.start, pos, start, get_alloc_ref());
-                cur = cyy::uninitialized_copy_a(first, last, cur, get_alloc_ref());
-                cur = cyy::uninitialized_move_a(pos, data_impl.finish, cur, get_alloc_ref());
-            }
-            catch (...)
-            {
-                deallocate(start, pos + count);
-            }
-
-            erase_at_end(data_impl.start);
-            data_impl.start = start;
-            data_impl.finish = cur;
-            data_impl.end_of_storage = cur;
-            return start + dist;
-        }
-        else
-        {
-            if (insert_end > data_impl.finish)
-            {
-                size_type pos_to_finish = data_impl.finish - pos;
-                auto mid = first + pos_to_finish;
-                cyy::uninitialized_move_a(pos, data_impl.finish, insert_end, get_alloc_ref());
-                std::copy_n(first, mid, pos);
-                cyy::uninitialized_copy_a(mid, last, data_impl.finish, get_alloc_ref());
-            }
-            else
-            {
-                pointer cur;
-                cyy::uninitialized_move_a(data_impl.finish-count, data_impl.finish, data_impl.finish, get_alloc_ref());
-                std::copy(pos, data_impl.finish-count, pos + count);
-                // std::copy(pos, );
-            }
-            data_impl.finish = data_impl.finish + count;
-            return pos;
-        }
+        size_type dist = pos - data_impl.start;
+        insert_range(data_impl.start + dist, first, last);
+        return begin() + dist;
     }
 
     iterator insert(const_iterator pos, std::initializer_list<value_type> ilist)
@@ -737,8 +649,8 @@ private:
         data_impl.finish = cyy::uninitialized_move_a(other.begin(), other.end(), data_impl.start, get_alloc_ref());
     }
 
-    template<typename InputIt>
-    void range_initialize(InputIt first, InputIt last, std::input_iterator_tag)
+    template<typename InputIterator>
+    void range_initialize(InputIterator first, InputIterator last, std::input_iterator_tag)
     {
         for (; first != last;)
         {
@@ -856,8 +768,8 @@ private:
         data_impl.end_of_storage = start + alloc_n;
     }
 
-    template<typename V>
-    iterator insert_at_pos(const_iterator pos, V&& value)
+    template<typename Value>
+    iterator insert_at_pos(const_iterator pos, Value&& value)
     {
         // equal to size() == capacity()
         if (data_impl.end_of_storage == data_impl.finish)
@@ -868,7 +780,7 @@ private:
             try
             {
                 cyy::uninitialized_move_a(data_impl.start, data_impl.start + dist, start, get_alloc_ref());
-                allocator_traits::construct(get_alloc_ref(), start+dist, std::forward<V>(value));
+                allocator_traits::construct(get_alloc_ref(), start+dist, std::forward<Value>(value));
                 cyy::uninitialized_move_a(data_impl.start+dist, data_impl.finish, start+dist+1, get_alloc_ref());
             }
             catch (...)
@@ -879,7 +791,7 @@ private:
             erase_at_end(data_impl.start);
             deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
             data_impl.start = start;
-            data_impl.finish = start + orignal_size;
+            data_impl.finish = start + orignal_size + 1;
             data_impl.end_of_storage = start + 2 * orignal_size;
             return start + dist;
         }
@@ -892,8 +804,107 @@ private:
             {
                 *cur = std::move(*(cur-1));
             }
-            *cur = std::forward<V>(value);
+            *cur = std::forward<Value>(value);
             return cur;
+        }
+    }
+
+    void insert_n(pointer pos, size_type count, const value_type& value)
+    {
+        pointer insert_end = pos + count;
+
+        if (data_impl.finish + count > data_impl.end_of_storage)
+        {
+            size_type orignal_capacity;
+            pointer cur, start;
+
+            orignal_capacity = capacity();
+
+            start = allocate(orignal_capacity + count);
+            try
+            {
+                cur = cyy::uninitialized_move_a(data_impl.start, pos, start, get_alloc_ref());
+                cur = cyy::uninitialized_fill_n_a(cur, count, value, get_alloc_ref());
+                cyy::uninitialized_move_a(pos, data_impl.finish, cur, get_alloc_ref());
+            }
+            catch (...)
+            {
+                deallocate(start, orignal_capacity + count);
+                throw;
+            }
+
+            erase_at_end(data_impl.start);
+            deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
+            data_impl.start = start;
+            data_impl.finish = cur;
+            data_impl.end_of_storage = cur;
+        }
+        else
+        {
+            if (insert_end > data_impl.finish)
+            {
+                cyy::uninitialized_move_a(pos, data_impl.finish, insert_end, get_alloc_ref());
+                std::fill_n(pos, data_impl.finish - pos, value);
+                cyy::uninitialized_fill_a(data_impl.finish, insert_end, value, get_alloc_ref());
+            }
+            else
+            {
+                cyy::uninitialized_move_a(data_impl.finish-count, data_impl.finish,
+                                          data_impl.finish, get_alloc_ref());
+                std::move(pos, data_impl.finish - count, insert_end);
+                std::fill_n(pos, count, value);
+            }
+            data_impl.finish = data_impl.finish + count;
+        }
+    }
+
+    template<typename InputIterator>
+    void insert_range(pointer pos, InputIterator first, InputIterator last)
+    {
+        const size_type count = std::distance(first, last);
+        pointer insert_end = pos + count;
+        // need to reallocate
+        if (data_impl.finish + count > data_impl.end_of_storage)
+        {
+            pointer start, cur;
+            size_type orignal_capacity = capacity();
+            start = allocate(orignal_capacity + count);
+            printf("%p alloc\n", (void*)this);
+            try
+            {
+                cur = cyy::uninitialized_move_a(data_impl.start, pos, start, get_alloc_ref());
+                cur = cyy::uninitialized_copy_a(first, last, cur, get_alloc_ref());
+                cur = cyy::uninitialized_move_a(pos, data_impl.finish, cur, get_alloc_ref());
+            }
+            catch (...)
+            {
+                deallocate(start, orignal_capacity + count);
+            }
+
+            erase_at_end(data_impl.start);
+            deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
+            data_impl.start = start;
+            data_impl.finish = cur;
+            data_impl.end_of_storage = cur;
+        }
+        else
+        {
+            if (insert_end > data_impl.finish)
+            {
+                size_type pos_to_finish = data_impl.finish - pos;
+                auto mid = first + pos_to_finish;
+                cyy::uninitialized_move_a(pos, data_impl.finish, insert_end, get_alloc_ref());
+                std::copy(first, mid, pos);
+                cyy::uninitialized_copy_a(mid, last, data_impl.finish, get_alloc_ref());
+            }
+            else
+            {
+                std::cout << size() << " "<< capacity() << " " << count << "\n";
+                cyy::uninitialized_move_a(data_impl.finish-count, data_impl.finish, data_impl.finish, get_alloc_ref());
+                std::move(pos, data_impl.finish-count, insert_end);
+                std::copy(first, last, pos);
+            }
+            data_impl.finish = data_impl.finish + count;
         }
     }
 };

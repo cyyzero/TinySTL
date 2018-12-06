@@ -306,13 +306,14 @@ int main()
         std::cout << "afer move r: " << r << std::endl;
 
         auto print_vec = [] (const auto& v) {
+            std::cout << "size = " << v.size() << " capacity = " << v.capacity() << "\nelements:\t";
             for (const auto& e : v) {
                 std::cout << e << " ";
             }
             std::cout << "\n";
         };
 
-        Vector<int> vec(3LL,100);
+        Vector<int> vec(3,100);
         print_vec(vec);
 
         auto it = vec.begin();
@@ -322,7 +323,7 @@ int main()
         vec.insert(it,2,300);
         print_vec(vec);
 
-        // "it" no longer valid, get a new one:
+        // // "it" no longer valid, get a new one:
         it = vec.begin();
 
         Vector<int> vec2(2,400);
