@@ -153,8 +153,8 @@ public:
     using const_reference        = const value_type&;
     using pointer                = typename allocator_traits::pointer;
     using const_pointer          = typename allocator_traits::const_pointer;
-    using iterator               = T*;
-    using const_iterator         = const T*;
+    using iterator               = typename allocator_traits::pointer;
+    using const_iterator         = typename allocator_traits::const_pointer;
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -362,14 +362,14 @@ public:
     }
 
     // direct access to the underlying array 
-    pointer data() noexcept
+    T* data() noexcept
     {
-        return data_impl.start;
+        return data_ptr(data_impl.first);
     }
 
-    const_pointer data() const noexcept
+    const T* data() const noexcept
     {
-        return data_impl.start;
+        return data_ptr(data_impl.first);
     }
 
     // get iterators
@@ -539,15 +539,18 @@ public:
     }
 
     // removes the element at pos
-    iterator erase(iterator pos)
+    iterator erase(const_iterator pos)
     {
-        return erase_at_pos(pos+1, end(), pos);
+        pointer p = pos - cbegin() + data_impl.start;
+        return range_erase(p, p+1);
     }
 
     // removes the elements in the range [first, last)
-    iterator erase(iterator first, iterator last)
+    iterator erase(const_iterator first, iterator last)
     {
-        return erase_at_pos(last, end(), first);
+        pointer first_p = first - cbegin() + data_impl.start;
+        pointer last_p  = last - first + first_p;
+        return range_erase(first_p, last_p);
     }
 
     // Appends the given element value to the end of the container
@@ -590,18 +593,12 @@ public:
             data_impl.start = start;
             data_impl.finish = start + orignal_size;
             data_impl.end_of_storage = start + count;
-            for (size_type i = 0; i < count - orignal_size; ++i, ++data_impl.finish)
-            {
-                allocator_traits::construct(get_alloc_ref(), data_impl.finish);
-            }
+            cyy::uninitialized_default_n_a(data_impl.finish, count - orignal_size, get_alloc_ref());
         }
         else if (count > size())
         {
             size_type append_size = count - size();
-            for (size_type i = 0; i < append_size; ++i, ++data_impl.finish)
-            {
-                allocator_traits::construct(get_alloc_ref(), data_impl.finish);
-            }
+            cyy::uninitialized_default_n_a(data_impl.finish, append_size, get_alloc_ref());
         }
         else
         {
@@ -620,18 +617,12 @@ public:
             data_impl.start = start;
             data_impl.finish = start + orignal_size;
             data_impl.end_of_storage = start + count;
-            for (size_type i = 0; i < count - orignal_size; ++i, ++data_impl.finish)
-            {
-                allocator_traits::construct(get_alloc_ref(), data_impl.finish, value);
-            }
+            cyy::uninitialized_fill_n_a(data_impl.finish, count - orignal_size, value, get_alloc_ref());
         }
         else if (count > size())
         {
             size_type append_size = count - size();
-            for (size_type i = 0; i < append_size; ++i, ++data_impl.finish)
-            {
-                allocator_traits::construct(get_alloc_ref(), data_impl.finish, value);
-            }
+            cyy::uninitialized_fill_n_a(data_impl.finish, append_size, value, get_alloc_ref());
         }
         else
         {
@@ -684,6 +675,20 @@ private:
         data_impl.finish = cyy::uninitialized_copy_a(first, last, data_impl.start, get_alloc_ref());
     }
 
+    // 
+    template<typename U>
+    U* data_ptr(U* ptr) const
+    {
+        return ptr;
+    }
+
+    template<typename U>
+    typename cyy::pointer_traits<U>::element_type*
+    data_ptr(U ptr) const
+    {
+        return empty() ? nullptr : std::addressof(*ptr);
+    }
+
     // allocate memory and copy elements into it
     template<typename ForwardIterator>
     pointer allocate_and_copy(size_type n, ForwardIterator first, ForwardIterator last)
@@ -708,6 +713,7 @@ private:
         data_impl.finish = pos;
     }
 
+    // do real assign work
     template<typename InputIterator>
     void assign_aux(InputIterator first, InputIterator last, std::input_iterator_tag)
     {
@@ -726,7 +732,6 @@ private:
         }
     }
 
-    // do real assign work
     template<typename ForwardIterator>
     void assign_aux(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag)
     {
@@ -748,21 +753,15 @@ private:
         }
         else
         {
-            // there's a better version
             erase_at_end(std::copy(first, last, data_impl.start));
         }
     }
 
-    iterator erase_at_pos(iterator first, iterator last, iterator target)
+    iterator range_erase(pointer first, pointer last)
     {
-        iterator dest = target;
-        for (; first != last; ++first, ++target)
-        {
-            *target = std::move(*first);
-        }
-        pointer p = std::addressof(*target);
-        erase_at_end(p);
-        return dest;
+        pointer finish = std::move(last, data_impl.finish, first);
+        erase_at_end(finish);
+        return iterator(first);
     }
 
     void expand()
@@ -820,13 +819,10 @@ private:
         {
             allocator_traits::construct(get_alloc_ref(), data_impl.finish, std::move(*(data_impl.finish-1)));
             ++data_impl.finish;
-            iterator cur;
-            for (cur = end()-2; cur != pos; --cur)
-            {
-                *cur = std::move(*(cur-1));
-            }
-            *cur = value_type(std::forward<Args>(args)...);
-            return cur;
+            pointer target = data_impl.start + (pos - cbegin());
+            std::move_backward(target, data_impl.finish-1, data_impl.finish);
+            *target = value_type(std::forward<Args>(args)...);
+            return iterator(target);
         }
     }
 
