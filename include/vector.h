@@ -218,7 +218,8 @@ public:
     Vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
         : Base(std::distance(first, last), alloc)
     {
-        range_initialize(first, last, typename std::iterator_traits<InputIterator>::iterator_category());
+        using Iterator_category =  typename std::iterator_traits<InputIterator>::iterator_category;
+        range_initialize(first, last, Iterator_category());
     }
 
     // destruct
@@ -262,9 +263,9 @@ public:
         return *this;
     }
 
-    Vector& operator=(std::initializer_list<value_type> l)
+    Vector& operator=(std::initializer_list<value_type> ilist)
     {
-        assign(l.begin(), l.end());
+        range_assign(ilist.begin(), ilist.end(), std::forward_iterator_tag());
         return *this;
     }
 
@@ -287,16 +288,16 @@ public:
         }
     }
 
-    template<typename InputIt>
-    void assign(InputIt first, InputIt last)
+    template<typename InputIterator>
+    void assign(InputIterator first, InputIterator last)
     {
-        using Iterator_category = typename std::iterator_traits<InputIt>::iterator_category;
-        assign_aux(first, last, Iterator_category());
+        using Iterator_category = typename std::iterator_traits<InputIterator>::iterator_category;
+        range_assign(first, last, Iterator_category());
     }
 
     void assign(std::initializer_list<value_type> ilist)
     {
-        assign(ilist.begin(), ilist.end());
+        range_assign(ilist.begin(), ilist.end(), std::forward_iterator_tag());
     }
 
     // access specified element
@@ -505,7 +506,7 @@ public:
     iterator insert(const_iterator pos, size_type count, const value_type& value)
     {
         size_type dist = pos - data_impl.start;
-        insert_n(data_impl.start + dist, count, value);
+        fill_insert(data_impl.start + dist, count, value);
         return begin() + dist;
     }
 
@@ -514,7 +515,8 @@ public:
     iterator insert(const_iterator pos, InputIterator first, InputIterator last)
     {
         size_type dist = pos - data_impl.start;
-        insert_range(data_impl.start + dist, first, last);
+        using Iterator_category = typename std::iterator_traits<InputIterator>::iterator_category;
+        range_insert(data_impl.start + dist, first, last, Iterator_category());
         return begin() + dist;
     }
 
@@ -689,6 +691,16 @@ private:
         return empty() ? nullptr : std::addressof(*ptr);
     }
 
+    // check alloc size
+    size_type check_length(size_type n, const char *s) const
+    {
+        if (max_size() - size() < n)
+            throw std::length_error(s);
+
+        const size_type len = size() + std::max(size(), n);
+        return (len < size() || len > max_size()) ? max_size() : len;
+    }
+
     // allocate memory and copy elements into it
     template<typename ForwardIterator>
     pointer allocate_and_copy(size_type n, ForwardIterator first, ForwardIterator last)
@@ -715,7 +727,7 @@ private:
 
     // do real assign work
     template<typename InputIterator>
-    void assign_aux(InputIterator first, InputIterator last, std::input_iterator_tag)
+    void range_assign(InputIterator first, InputIterator last, std::input_iterator_tag)
     {
         pointer cur = data_impl.start;
         for (; first != last && cur != data_impl.finish; ++cur, ++first)
@@ -733,7 +745,7 @@ private:
     }
 
     template<typename ForwardIterator>
-    void assign_aux(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag)
+    void range_assign(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag)
     {
         const size_type n = std::distance(first, last);
         if (n > capacity())
@@ -767,7 +779,7 @@ private:
     void expand()
     {
         size_type n = capacity();
-        size_type alloc_n = (n == 0) ? 1 : n*2;
+        size_type alloc_n = (n == 0) ? 1 : check_length(n, "Vector::expand");
         pointer start = allocate(alloc_n);
 
         try
@@ -795,7 +807,7 @@ private:
         {
             size_type dist = std::distance(cbegin(), pos);
             size_type orignal_size = size();
-            size_type alloc_size = (orignal_size == 0) ? 1 : 2 * orignal_size;
+            size_type alloc_size = (orignal_size == 0) ? 1 : check_length(orignal_size, "Vector::insert_at_pos");
             pointer start = allocate(alloc_size);
             try
             {
@@ -826,18 +838,18 @@ private:
         }
     }
 
-    void insert_n(pointer pos, size_type count, const value_type& value)
+    void fill_insert(pointer pos, size_type count, const value_type& value)
     {
         pointer insert_end = pos + count;
 
-        if (data_impl.finish + count > data_impl.end_of_storage)
+        if (count > data_impl.end_of_storage - data_impl.finish)
         {
-            size_type orignal_capacity;
+            size_type alloc_size;
             pointer cur, start;
 
-            orignal_capacity = capacity();
+            alloc_size = check_length(count, "Vector::fill_insert");
 
-            start = allocate(orignal_capacity + count);
+            start = allocate(alloc_size);
             try
             {
                 cur = cyy::uninitialized_move_a(data_impl.start, pos, start, get_alloc_ref());
@@ -846,7 +858,7 @@ private:
             }
             catch (...)
             {
-                deallocate(start, orignal_capacity + count);
+                deallocate(start, alloc_size);
                 throw;
             }
 
@@ -876,16 +888,26 @@ private:
     }
 
     template<typename InputIterator>
-    void insert_range(pointer pos, InputIterator first, InputIterator last)
+    void range_insert(pointer pos, InputIterator first, InputIterator last, std::input_iterator_tag)
+    {
+        for (; first != last; ++first)
+        {
+            insert_at_pos(pos, *first);
+            pos += 2;
+        }
+    }
+
+    template<typename ForwardIterator>
+    void range_insert(pointer pos, ForwardIterator first, ForwardIterator last, std::forward_iterator_tag)
     {
         const size_type count = std::distance(first, last);
         pointer insert_end = pos + count;
         // need to reallocate
-        if (data_impl.finish + count > data_impl.end_of_storage)
+        if (count > data_impl.end_of_storage - data_impl.finish)
         {
             pointer start, cur;
-            size_type orignal_capacity = capacity();
-            start = allocate(orignal_capacity + count);
+            size_type alloc_size = check_length(count, "Vector::range_insert");
+            start = allocate(alloc_size);
             try
             {
                 cur = cyy::uninitialized_move_a(data_impl.start, pos, start, get_alloc_ref());
@@ -894,7 +916,7 @@ private:
             }
             catch (...)
             {
-                deallocate(start, orignal_capacity + count);
+                deallocate(start, alloc_size);
             }
 
             erase_at_end(data_impl.start);
