@@ -779,7 +779,7 @@ private:
     void expand()
     {
         size_type n = capacity();
-        size_type alloc_n = (n == 0) ? 1 : check_length(n, "Vector::expand");
+        size_type alloc_n = check_length(1, "Vector::expand");
         pointer start = allocate(alloc_n);
 
         try
@@ -792,7 +792,7 @@ private:
             throw;
         }
 
-        cyy::Destroy(begin(), end());
+        cyy::Destroy(data_impl.start, data_impl.finish);
         deallocate(data_impl.start, data_impl.end_of_storage - data_impl.start);
         data_impl.start = start;
         data_impl.finish = start+n;
@@ -807,7 +807,7 @@ private:
         {
             size_type dist = std::distance(cbegin(), pos);
             size_type orignal_size = size();
-            size_type alloc_size = (orignal_size == 0) ? 1 : check_length(orignal_size, "Vector::insert_at_pos");
+            size_type alloc_size = check_length(1, "Vector::insert_at_pos");
             pointer start = allocate(alloc_size);
             try
             {
@@ -937,7 +937,6 @@ private:
             }
             else
             {
-                std::cout << size() << " "<< capacity() << " " << count << "\n";
                 cyy::uninitialized_move_a(data_impl.finish-count, data_impl.finish, data_impl.finish, get_alloc_ref());
                 std::move(pos, data_impl.finish-count, insert_end);
                 std::copy(first, last, pos);
