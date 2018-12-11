@@ -6,7 +6,7 @@
 namespace cyy
 {
 
-namespace
+namespace detail
 {
 // Store pointer and deleter in Unique_ptr. Use empty base optimize
 template<typename Ptr, typename Del, bool IsReferenceOrPointerOrFinal>
@@ -48,6 +48,13 @@ struct Unique_ptr_data<Ptr, Del, true>
     const Del& get_del() const
     {
         return del;
+    }
+
+    void swap(Unique_ptr_data& data) noexcept
+    {
+        using std::swap;
+        swap(ptr, data.ptr);
+        swap(del, data.del);
     }
 
     private:
@@ -97,6 +104,13 @@ struct Unique_ptr_data<Ptr, Del, false>
         return static_cast<const Del&>(*this);
     }
 
+    void swap(Unique_ptr_data& data) noexcept
+    {
+        using std::swap;
+        swap(ptr, data.ptr);
+        swap(get_del(), data.get_del());
+    }
+
     private:
         Ptr ptr;
 };
@@ -121,6 +135,7 @@ struct default_delete
     default_delete(const default_delete<U>& d) noexcept
     {
     }
+
     ~default_delete() = default;
 
     void operator()(T* ptr) const
@@ -154,6 +169,7 @@ class Unique_ptr
 
         using type = decltype(test<std::remove_reference_t<Deleter>>(nullptr));
     };
+
 public:
 
     static_assert(!std::is_rvalue_reference<Deleter>::value,
@@ -209,12 +225,12 @@ public:
     }
 
     template<typename U, typename E, typename = std::enable_if_t<
-        std::is_convertible<typename Unique_ptr<U, E>::pointer,
-                            pointer>::value &&
-        !std::is_array<U>::value &&
-        std::conditional_t<std::is_reference<deleter_type>::value,
-                           std::is_same<E, deleter_type>,
-                           std::is_convertible<E, deleter_type>>::value>>
+             std::is_convertible<typename Unique_ptr<U, E>::pointer,
+                                 pointer>::value &&
+             !std::is_array<U>::value &&
+             std::conditional_t<std::is_reference<deleter_type>::value,
+                                std::is_same<E, deleter_type>,
+                                std::is_convertible<E, deleter_type>>::value>>
     Unique_ptr(Unique_ptr<U, E>&& u) noexcept
         : data(u.release(), std::forward<E>(u.get_deleter()))
     {
@@ -233,12 +249,54 @@ public:
     // actually cyy::auto_ptr doesn't exits
 
 
+    // assignments
+
+    Unique_ptr& operator=(std::nullptr_t) noexcept
+    {
+        reset();
+        return *this;
+    }
+
+    Unique_ptr& operator=(Unique_ptr&& r) noexcept
+    {
+        reset(r.release());
+        get_deleter() = std::forward<deleter_type>(r.get_deleter());
+        return *this;
+    }
+
+    template<typename U, typename E, typename = std::enable_if_t<
+             !std::is_array<U>::value &&
+             std::is_convertible<typename Unique_ptr<U, E>::pointer, pointer>::value &&
+             std::is_assignable<deleter_type&, E&&>::value>>
+    Unique_ptr& operator=(Unique_ptr<U, E>&& r) noexcept
+    {
+        reset(r.get_deleter());
+        get_deleter() = std::forward<E>(r.get_deleter());
+        return *this;
+    }
+
+
     // returns a pointer to the managed object and releases the ownership
     pointer release() noexcept
     {
         pointer p = data.get_ptr();
         data.get_ptr() = pointer();
         return p;
+    }
+
+    // replace the managed object
+    void reset(pointer ptr = pointer()) noexcept
+    {
+        pointer old_ptr = data.get_ptr();
+        data.get_ptr() = ptr;
+        if (old_ptr)
+            get_deleter()(old_ptr);
+    }
+
+    // swap the managed objects and associated deleters
+    void swap(Unique_ptr& other) noexcept
+    {
+        data.swap(other.data);
     }
 
     // returns a pointer to the managed object
@@ -253,15 +311,40 @@ public:
         return data.get_del();
     }
 
+    // return the deleter that is used for destruction of the managed object
     const Deleter& get_deleter() const noexcept
     {
         return data.get_del();
     }
 
+    // check if there is an associated managed object
+    explicit operator bool() const noexcept
+    {
+        return get() == pointer() ? false : true;
+    }
+
+    // dereference pointer to the managed object
+    std::add_lvalue_reference_t<T> operator*() const
+    {
+        return *data.get_ptr();
+    }
+
+    pointer operator->() const noexcept
+    {
+        return data.get_ptr();
+    }
+
 private:
-    Unique_ptr_data<pointer, deleter_type, is_reference_or_pointer_or_final<deleter_type>::value> data;
+    detail::Unique_ptr_data<pointer, deleter_type, detail::is_reference_or_pointer_or_final<deleter_type>::value> data;
 
 };
+
+// create a unique pointer that manages a new object
+template<typename T, typename... Args>
+Unique_ptr<T> make_unique(Args&&... args)
+{
+    return Unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 
 } // namespce cyy
 
