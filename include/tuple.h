@@ -8,7 +8,7 @@
 
 namespace cyy
 {
-namespace
+namespace detail
 {
 
 template<std::size_t Index, typename Head, bool IsEmpty>
@@ -213,12 +213,12 @@ const Head& get_helper2(const Tuple_impl<I, Head, Tails...>& t)
     return t.head();
 }
 
-} // unnamed namespace
+} // namespace detail
 
 template<typename... Elements>
-class Tuple : public Tuple_impl<0, Elements...>
+class Tuple : public detail::Tuple_impl<0, Elements...>
 {
-    using Inherited = Tuple_impl<0, Elements...>;
+    using Inherited = detail::Tuple_impl<0, Elements...>;
 public:
     // constructors
     constexpr
@@ -237,12 +237,12 @@ public:
     template<typename... UElements, typename = std::enable_if_t<
              std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
     constexpr Tuple(const Tuple<UElements...>& other)
-        : Inherited(static_cast<const Tuple_impl<0, UElements...>&>(other)) { }
+        : Inherited(static_cast<const detail::Tuple_impl<0, UElements...>&>(other)) { }
 
     template<typename... UElements, typename = std::enable_if_t<
              std::conjunction_v<std::is_convertible<UElements, Elements>...>>>
     constexpr Tuple(Tuple<UElements...>&& other)
-        : Inherited(static_cast<Tuple_impl<0, UElements...>&&>(other)) { }
+        : Inherited(static_cast<detail::Tuple_impl<0, UElements...>&&>(other)) { }
 
     Tuple(const Tuple&) = default;
 
@@ -318,13 +318,13 @@ public:
     template<std::size_t I>
     decltype(auto) get()
     {
-        return get_helper<I>(*this);
+        return detail::get_helper<I>(*this);
     }
 
     template<std::size_t I>
     decltype(auto) get() const
     {
-        return get_helper<I>(*this);
+        return detail::get_helper<I>(*this);
     }
 };
 
@@ -339,9 +339,9 @@ class Tuple<>
 
 // Specialization for 2-elements tuple
 template<typename T1, typename T2>
-class Tuple<T1, T2> : public Tuple_impl<0, T1, T2>
+class Tuple<T1, T2> : public detail::Tuple_impl<0, T1, T2>
 {
-    using Inherited = Tuple_impl<0, T1, T2>;
+    using Inherited = detail::Tuple_impl<0, T1, T2>;
 
 public:
 
@@ -364,11 +364,11 @@ public:
 
     template<typename U1, typename U2>
     Tuple(const Tuple<U1, U2>& other)
-        : Inherited(static_cast<Tuple_impl<0, U1, U2>&>(other)) { }
+        : Inherited(static_cast<detail::Tuple_impl<0, U1, U2>&>(other)) { }
 
     template<typename U1, typename U2>
     Tuple(Tuple<U1, U2>&& other)
-        : Inherited(static_cast<Tuple_impl<0, U1, U2>&&>(other)) { }
+        : Inherited(static_cast<detail::Tuple_impl<0, U1, U2>&&>(other)) { }
 
     template<typename U1, typename U2>
     Tuple(const pair<U1, U2>& other)
@@ -395,14 +395,14 @@ public:
     template<typename U1, typename U2>
     Tuple& operator=(const Tuple<U1, U2>& other)
     {
-        static_cast<Tuple_impl<0, U1, U2>&>(*this) = other;
+        static_cast<detail::Tuple_impl<0, U1, U2>&>(*this) = other;
         return *this;
     }
 
     template<typename U1, typename U2>
     Tuple& operator=(Tuple<U1, U2>&& other)
     {
-        static_cast<Tuple_impl<0, U1, U2>&>(*this) = std::move(other);
+        static_cast<detail::Tuple_impl<0, U1, U2>&>(*this) = std::move(other);
         return *this;
     }
 
@@ -417,21 +417,21 @@ public:
     template<std::size_t I>
     decltype(auto) get()
     {
-        return get_helper<I>(*this);
+        return detail::get_helper<I>(*this);
     }
 
     template<std::size_t I>
     decltype(auto) get() const
     {
-        return get_helper<I>(*this);
+        return detail::get_helper<I>(*this);
     }
 };
 
 // Specialization for 1-element tuple
 template<typename T>
-class Tuple<T> : public Tuple_impl<0, T>
+class Tuple<T> : public detail::Tuple_impl<0, T>
 {
-    using Inherited = Tuple_impl<0, T>;
+    using Inherited = detail::Tuple_impl<0, T>;
 
 public:
     // constructors
@@ -452,11 +452,11 @@ public:
 
     template<typename U>
     Tuple(const Tuple<U>& other)
-        : Inherited(static_cast<Tuple_impl<0, U>&>(other)) { }
+        : Inherited(static_cast<detail::Tuple_impl<0, U>&>(other)) { }
 
     template<typename U>
     Tuple(Tuple<U>&& other)
-        : Inherited(static_cast<Tuple_impl<0, U>&&>(other)) { }
+        : Inherited(static_cast<detail::Tuple_impl<0, U>&&>(other)) { }
 
     // assignments
     Tuple& operator=(const Tuple& other)
@@ -494,13 +494,13 @@ public:
     template<std::size_t I>
     decltype(auto) get()
     {
-        return get_helper<I>(*this);
+        return detail::get_helper<I>(*this);
     }
 
     template<std::size_t I>
     decltype(auto) get() const
     {
-        return get_helper<I>(*this);
+        return detail::get_helper<I>(*this);
     }
 };
 
@@ -601,7 +601,7 @@ Tuple<Types&...> tie(Types&... args) noexcept
 }
 
 // ignore,  a placeholder
-namespace
+namespace detail
 {
 struct Ignore_t
 {
@@ -611,13 +611,13 @@ struct Ignore_t
         return *this;
     }
 };
-} // unnamed namespace
+} // namespace detail
 
-const Ignore_t ignore{};
+const detail::Ignore_t ignore{};
 
 // tuple_cat, connect Tuples to one Tuple
 
-namespace
+namespace detail
 {
 template<typename>
 struct is_tuple_impl : public std::false_type
@@ -628,10 +628,10 @@ template<typename... Types>
 struct is_tuple_impl<Tuple<Types...>> : public std::true_type
 {
 };
-} // unnamed namespace
+} // namespace detail
 
 template<typename T>
-struct is_tuple : is_tuple_impl<std::remove_cv_t<std::remove_reference_t<T>>>
+struct is_tuple : detail::is_tuple_impl<std::remove_cv_t<std::remove_reference_t<T>>>
 {
 };
 
@@ -658,7 +658,7 @@ constexpr
 Tuple_element_t<I, Tuple<Types...>>&
 get(Tuple<Types...>& t) noexcept
 {
-    return get_helper<I>(t);
+    return detail::get_helper<I>(t);
 }
 
 template<std::size_t I, typename... Types>
@@ -666,7 +666,7 @@ constexpr
 const Tuple_element_t<I, Tuple<Types...>>&
 get(const Tuple<Types...>& t) noexcept
 {
-    return get_helper<I>(t);
+    return detail::get_helper<I>(t);
 }
 
 template<std::size_t I, typename... Types>
@@ -689,28 +689,28 @@ template<typename T, typename... Types>
 constexpr
 T& get(Tuple<Types...>& t) noexcept
 {
-    return get_helper2<T>(t);
+    return detail::get_helper2<T>(t);
 }
 
 template<typename T, typename... Types>
 constexpr
 const T& get(const Tuple<Types...>& t) noexcept
 {
-    return get_helper2<T>(t);
+    return detail::get_helper2<T>(t);
 }
 
 template<typename T, typename... Types>
 constexpr
 T&& get(Tuple<Types...>&& t) noexcept
 {
-    return std::move(get_helper2<T>(t));
+    return std::move(detail::get_helper2<T>(t));
 }
 
 template<typename T, typename... Types>
 constexpr
 const T&& get(const Tuple<Types...>&& t) noexcept
 {
-    return std::move(get_helper2<T>(t));
+    return std::move(detail::get_helper2<T>(t));
 }
 
 // operator = , != , < and the other
@@ -729,8 +729,8 @@ struct Tuple_compare
     bool less(const T& t, const U& u)
     {
         return (bool)(cyy::get<I>(t) < cyy::get<I>(u)) ||
-               !(bool)(cyy::get<I>(u) < cyy::get<I>(t)) &&
-               Tuple_compare<T, U, I+1, N>::less(t, u);
+               (!(bool)(cyy::get<I>(u) < cyy::get<I>(t)) &&
+               Tuple_compare<T, U, I+1, N>::less(t, u));
     }
 };
 

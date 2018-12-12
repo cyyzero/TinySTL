@@ -38,6 +38,8 @@ void print(const cyy::Tuple<Args...>& t)
 
 int main()
 {
+    // hide in detail
+    // cyy::Head_base<1, int, false> h;
     // std::tuple
     // tests for std::tuple constructor
     {
