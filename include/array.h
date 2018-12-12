@@ -8,7 +8,7 @@
 
 namespace cyy
 {
-namespace // impl
+namespace detail
 {
 template<typename T, std::size_t N>
 struct array_traits
@@ -41,7 +41,7 @@ struct array_traits<T, 0>
         return nullptr;
     }
 };
-} // unnamed namespace
+} // namespace detail
 
 template<typename T, std::size_t N>
 struct array
@@ -59,7 +59,7 @@ struct array
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 
-    using array_type = array_traits<T, N>;
+    using array_type = detail::array_traits<T, N>;
     typename array_type::type elems;
 
     // Element access
