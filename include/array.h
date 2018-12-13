@@ -44,7 +44,7 @@ struct array_traits<T, 0>
 } // namespace detail
 
 template<typename T, std::size_t N>
-struct array
+struct Array
 {
     using value_type             = T;
     using size_type              = std::size_t;
@@ -202,71 +202,71 @@ struct array
         std::fill_n(begin(), N, value);
     }
 
-    void swap(array& other) noexcept(noexcept(swap(std::declval<T&>(), std::declval<T&>())))
+    void swap(Array& other) noexcept(noexcept(swap(std::declval<T&>(), std::declval<T&>())))
     {
         std::swap_ranges(begin(), end(), other.begin());
     }
 };
 
 template<typename T, std::size_t N>
-inline bool operator==(const array<T, N>& lhs, const array<T, N>& rhs)
+inline bool operator==(const Array<T, N>& lhs, const Array<T, N>& rhs)
 {
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<typename T, std::size_t N>
-inline bool operator!=(const array<T, N>& lhs, const array<T, N>& rhs)
+inline bool operator!=(const Array<T, N>& lhs, const Array<T, N>& rhs)
 {
     return !(lhs == rhs);
 }
 
 template<typename T, std::size_t N>
-inline bool operator<(const array<T, N>& lhs, const array<T, N>& rhs)
+inline bool operator<(const Array<T, N>& lhs, const Array<T, N>& rhs)
 {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
 template<typename T, std::size_t N>
-inline bool operator>(const array<T, N>& lhs, const array<T, N>& rhs)
+inline bool operator>(const Array<T, N>& lhs, const Array<T, N>& rhs)
 {
     return rhs < lhs;
 }
 
 template<typename T, std::size_t N>
-inline bool operator<=(const array<T, N>& lhs, const array<T, N>& rhs)
+inline bool operator<=(const Array<T, N>& lhs, const Array<T, N>& rhs)
 {
     return !(lhs > rhs);
 }
 
 template<typename T, std::size_t N>
-inline bool operator>=(const array<T, N>& lhs, const array<T, N>& rhs)
+inline bool operator>=(const Array<T, N>& lhs, const Array<T, N>& rhs)
 {
     return !(lhs < rhs);
 }
 
 template<std::size_t I, typename T, std::size_t N>
-constexpr T& get(array<T, N>& a) noexcept
+constexpr T& get(Array<T, N>& a) noexcept
 {
     static_assert(I < N, "index is out of bound");
     return a.at(I);
 }
 
 template<std::size_t I, typename T, std::size_t N>
-constexpr T&& get(array<T, N>&& a) noexcept
+constexpr T&& get(Array<T, N>&& a) noexcept
 {
     return std::move(get<I>(a));
 }
 
 template<std::size_t I, typename T, std::size_t N>
-constexpr const T& get(const array<T, N>& a) noexcept
+constexpr const T& get(const Array<T, N>& a) noexcept
 {
     return static_cast<const T&>(
-        get<I>(const_cast<array<T, N>&>(a))
+        get<I>(const_cast<Array<T, N>&>(a))
     );
 }
 
 template<std::size_t I, typename T, std::size_t N>
-constexpr const T&& get(const array<T, N>&& a) noexcept
+constexpr const T&& get(const Array<T, N>&& a) noexcept
 {
     return std::remove(get<I>(a));
 }
