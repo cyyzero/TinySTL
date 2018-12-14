@@ -32,6 +32,7 @@ int main()
         Unique_ptr<Foo> up1;  // up1 is empty
         static_assert(sizeof(up1) == sizeof(Foo*));
         Unique_ptr<Foo> up1b(nullptr);  // up1b is empty
+        // Unique_ptr<Foo> upCopy(up1);
     
         std::cout << "Example constructor(2)...\n";
         {
@@ -209,6 +210,9 @@ int main()
             // Foo instance will continue to live, 
             // despite p2 going out of scope
         }
+
+        // cyy::Unique_ptr<Foo> p2;
+        // p2 = p1;
     
         std::cout << "About to leave program...\n";
     }

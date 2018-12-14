@@ -236,6 +236,10 @@ public:
     {
     }
 
+    template<typename U, typename E>
+    Unique_ptr(const Unique_ptr<U, E>&) = delete;
+
+
     // destructor
     ~Unique_ptr()
     {
@@ -275,6 +279,8 @@ public:
         return *this;
     }
 
+    template<typename U, typename E>
+    Unique_ptr& operator=(const Unique_ptr<U, E>& r) = delete;
 
     // returns a pointer to the managed object and releases the ownership
     pointer release() noexcept
