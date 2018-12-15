@@ -152,7 +152,24 @@ struct default_delete
 template<typename T>
 struct default_delete<T[]>
 {
+    constexpr default() noexcept = default;
 
+    template<typename U, typename = std::enable_if_t<std::is_convertible<U(*)[], T(*)[]>::value>>
+    default_delete(const default<U[]>& d) noexcept
+    {
+    }
+
+    ~default_delete() = default;
+
+    void operator()(T* ptr) const
+    {
+        static_assert(sizeof(T) > 0,
+                      "Can't delete a pointer to an incomplete type");
+        delete []ptr;
+    }
+
+    template<typename U>
+    void operator()(U* ptr) const = delete;
 };
 
 template<typename T, typename Deleter = cyy::default_delete<T>>
@@ -236,8 +253,8 @@ public:
     {
     }
 
-    template<typename U, typename E>
-    Unique_ptr(const Unique_ptr<U, E>&) = delete;
+    // delete constructor from lvalue reference
+    Unique_ptr(const Unique_ptr&) = delete;
 
 
     // destructor
@@ -279,8 +296,8 @@ public:
         return *this;
     }
 
-    template<typename U, typename E>
-    Unique_ptr& operator=(const Unique_ptr<U, E>& r) = delete;
+    // delete assign from lvalue reference
+    Unique_ptr& operator=(const Unique_ptr& r) = delete;
 
     // returns a pointer to the managed object and releases the ownership
     pointer release() noexcept
