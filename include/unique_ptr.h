@@ -8,8 +8,18 @@ namespace cyy
 
 namespace detail
 {
+
+template<typename T>
+struct is_reference_or_pointer_or_final
+    : public std::disjunction<std::is_reference<T>,
+                              std::is_pointer<T>,
+                              std::is_final<T>>
+{
+};
+
 // Store pointer and deleter in Unique_ptr. Use empty base optimize
-template<typename Ptr, typename Del, bool IsReferenceOrPointerOrFinal>
+template<typename Ptr, typename Del, bool IsReferenceOrPointerOrFinal = 
+         is_reference_or_pointer_or_final<Del>::value>
 struct Unique_ptr_data;
 
 template<typename Ptr, typename Del>
@@ -115,28 +125,21 @@ struct Unique_ptr_data<Ptr, Del, false>
         Ptr ptr;
 };
 
-template<typename T>
-struct is_reference_or_pointer_or_final
-    : public std::disjunction<std::is_reference<T>,
-                              std::is_pointer<T>,
-                              std::is_final<T>>
-{
-};
-} // unnamed namespace
+} // namespace detail
 
 // default deleter for Unique_ptr
 template<typename T>
-struct default_delete
+struct Default_delete
 {
     // Constructs a std::default_delete object.
-    constexpr default_delete() noexcept = default;
+    constexpr Default_delete() noexcept = default;
 
     template<typename U, typename = std::enable_if_t<std::is_convertible_v<U*, T*>>>
-    default_delete(const default_delete<U>& d) noexcept
+    Default_delete(const Default_delete<U>& d) noexcept
     {
     }
 
-    ~default_delete() = default;
+    ~Default_delete() = default;
 
     void operator()(T* ptr) const
     {
@@ -150,16 +153,16 @@ struct default_delete
 };
 
 template<typename T>
-struct default_delete<T[]>
+struct Default_delete<T[]>
 {
-    constexpr default() noexcept = default;
+    constexpr Default_delete() noexcept = default;
 
     template<typename U, typename = std::enable_if_t<std::is_convertible<U(*)[], T(*)[]>::value>>
-    default_delete(const default<U[]>& d) noexcept
+    Default_delete(const Default_delete<U[]>& d) noexcept
     {
     }
 
-    ~default_delete() = default;
+    ~Default_delete() = default;
 
     void operator()(T* ptr) const
     {
@@ -172,9 +175,12 @@ struct default_delete<T[]>
     void operator()(U* ptr) const = delete;
 };
 
-template<typename T, typename Deleter = cyy::default_delete<T>>
+template<typename T, typename Deleter = cyy::Default_delete<T>>
 class Unique_ptr
 {
+    static_assert(!std::is_rvalue_reference<Deleter>::value,
+                  "Unique_ptr can't be initialized by a Deleter which is a rvalue reference");
+
     struct pointer_helper
     {
         template<typename U>
@@ -189,9 +195,6 @@ class Unique_ptr
 
 public:
 
-    static_assert(!std::is_rvalue_reference<Deleter>::value,
-                  "Unique_ptr can't be initialized by a Deleter which is a rvalue reference");
-
     using pointer      = typename pointer_helper::type;
     using element_type = T;
     using deleter_type = Deleter;
@@ -202,23 +205,28 @@ public:
     Unique_ptr() noexcept
         : data()
     {
-    }
+        static_assert(!std::is_pointer<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of pointer type");
+        static_assert(!std::is_reference<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of reference type");    }
 
     constexpr
     Unique_ptr(std::nullptr_t) noexcept
         : data()
     {
-    }
+        static_assert(!std::is_pointer<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of pointer type");
+        static_assert(!std::is_reference<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of reference type");    }
 
     explicit
     Unique_ptr(pointer p) noexcept
         : data(p)
     {
         static_assert(!std::is_pointer<deleter_type>::value,
-                      "Unique_ptr(pointer p) is ill-formed if Deleter is of pointer type");
-
+                      "This constructor is ill-formed if Deleter is of pointer type");
         static_assert(!std::is_reference<deleter_type>::value,
-                      "Unique_ptr(pointer p) is ill-formed if Deleter is of reference type");
+                      "This constructor is ill-formed if Deleter is of reference type");
     }
 
     Unique_ptr(pointer p, std::conditional_t<std::is_reference<deleter_type>::value, 
@@ -358,8 +366,174 @@ public:
     }
 
 private:
-    detail::Unique_ptr_data<pointer, deleter_type, detail::is_reference_or_pointer_or_final<deleter_type>::value> data;
+    detail::Unique_ptr_data<pointer, deleter_type> data;
 
+};
+
+// specialization for manage array
+template<typename T, typename Deleter>
+class Unique_ptr<T[], Deleter>
+{
+    static_assert(!std::is_rvalue_reference<Deleter>::value,
+                "Unique_ptr can't be initialized by a Deleter which is a rvalue reference");
+
+    struct pointer_helper
+    {
+        template<typename U>
+        static typename U::pointer test(typename U::pointer *);
+
+        template<typename U>
+        static T* test(...);
+
+        using type = decltype(test<std::remove_reference_t<Deleter>>(nullptr));
+    };
+
+public:
+    using pointer      = typename pointer_helper::type;
+    using element_type = T;
+    using deleter_type = Deleter;
+
+    // constructors
+
+    constexpr Unique_ptr() noexcept
+        : data()
+    {
+        static_assert(!std::is_pointer<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of pointer type");
+        static_assert(!std::is_reference<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of reference type");
+    }
+
+    constexpr Unique_ptr(std::nullptr_t) noexcept
+        : data()
+    {
+        static_assert(!std::is_pointer<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of pointer type");
+        static_assert(!std::is_reference<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of reference type");
+    }
+
+    explicit Unique_ptr(pointer p) noexcept
+        : data(p)
+    {
+        static_assert(!std::is_pointer<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of pointer type");
+        static_assert(!std::is_reference<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is of reference type");
+    }
+
+    Unique_ptr(pointer p, std::conditional_t<std::is_reference<deleter_type>::value,
+                                             deleter_type,
+                                             const deleter_type&> d) noexcept
+        : data(p, std::forward<decltype(d)>(d))
+    {
+    }
+
+    Unique_ptr(pointer p, std::remove_reference_t<deleter_type>&& d)
+        : data(p, std::forward<decltype(d)>(d))
+    {
+        static_assert(!std::is_reference<deleter_type>::value,
+                      "This constructor is ill-formed if Deleter is a reference type");
+    }
+
+    Unique_ptr(Unique_ptr&& u) noexcept
+        : data(u.release(), u.get_deleter())
+    {
+    }
+
+    Unique_ptr(const Unique_ptr&) = delete;
+
+    // destructor
+    ~Unique_ptr()
+    {
+        if (data.get_ptr() != nullptr)
+        {
+            data.get_del()(data.get_ptr());
+        }
+    }
+
+    // assignment
+    Unique_ptr& operator=(Unique_ptr&& r) noexcept
+    {
+        reset(r.release());
+        data.get_del() = std::forward<deleter_type>(r.get_deleter());
+        return *this;
+    }
+
+    Unique_ptr& operator=(std::nullptr_t) noexcept
+    {
+        reset();
+        return *this;
+    }
+
+    Unique_ptr& operator=(const Unique_ptr&) = delete;
+
+    // returns a pointer to the managed object and releases the ownership
+    pointer release() noexcept
+    {
+        pointer p = data.get_ptr();
+        data.get_ptr() = pointer();
+        return p;
+    }
+
+    // returns a pointer to the managed object and releases the ownership
+    void reset(pointer ptr = pointer()) noexcept
+    {
+        pointer old_ptr = data.get_ptr();
+        data.get_ptr() = ptr;
+        if (old_ptr)
+        {
+            data.get_del()(old_ptr);
+        }
+    }
+
+    // prevent using reset() with a pointer to derived.
+    // (which would result in undefined behavior with arrays)
+    template<typename U>
+    void reset(U) = delete;
+
+    void reset(std::nullptr_t) noexcept
+    {
+        reset();
+    }
+
+    // swaps the managed objects
+    void swap(Unique_ptr& other) noexcept
+    {
+        data.swap(other.data);
+    }
+
+    // returns a pointer to the managed object
+    pointer get() const noexcept
+    {
+        return data.get_ptr();
+    }
+
+    // returns the deleter that is used for destruction of the managed object
+    deleter_type& get_deleter() noexcept
+    {
+        return data.get_del();
+    }
+
+    const deleter_type& get_deleter() const noexcept
+    {
+        return data.get_del();
+    }
+
+    // checks if there is an associated managed object
+    explicit operator bool() const noexcept
+    {
+        return data.get_ptr() == pointer() ? false : true;
+    }
+
+    // provides indexed access to the managed array
+    T& operator[](std::size_t i) const
+    {
+        return *(data.get_ptr() + i);
+    }
+
+private:
+    detail::Unique_ptr_data<pointer, deleter_type> data;
 };
 
 // create a unique pointer that manages a new object

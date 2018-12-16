@@ -71,10 +71,10 @@ int main()
             Unique_ptr<Foo, D> up6d(std::move(up6c)); // D is copied
         }
  
-        // std::cout << "Example array constructor...\n";
-        // {
-        //     Unique_ptr<Foo[]> up(new Foo[3]);
-        // } // three Foo objects deleted
+        std::cout << "Example array constructor...\n";
+        {
+            Unique_ptr<Foo[]> up(new Foo[3]);
+        } // three Foo objects deleted
     }
     std::cout << "\nTests for relaese():\n\n";
     {
@@ -217,4 +217,23 @@ int main()
         std::cout << "About to leave program...\n";
     }
 
+    std::cout << "\n\nTests for unique_ptr for array\n\n";
+    {
+    const int size = 10; 
+    cyy::Unique_ptr<int[]> fact(new int[size]);
+ 
+    for (int i = 0; i < size; ++i) {
+        fact[i] = (i == 0) ? 1 : i * fact[i-1];
+    }
+ 
+    for (int i = 0; i < size; ++i) {
+        std::cout << i << ": " << fact[i] << '\n';
+    }
+    Unique_ptr<int[]> p(std::move(fact));
+    for (int i = 0; i < size; ++i) {
+        std::cout << p[i] << " ";
+    }
+    std::cout << "\n";
+    p.reset();
+    }
 }
