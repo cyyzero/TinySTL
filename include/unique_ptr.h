@@ -543,25 +543,25 @@ namespace detail
 template<typename T>
 struct make_unique_helper
 {
-    using Single_object = T;
+    using single_t = cyy::Unique_ptr<T>;
 };
 
 template<typename T>
 struct make_unique_helper<T[]>
 {
-    using Array_unknown_bound = T[];
+    using array_t = cyy::Unique_ptr<T[]>;
 };
 
 template<typename T, std::size_t Size>
 struct make_unique_helper<T[Size]>
 {
-    using Array_known_bound = T[Size];
+    struct invalid_t { };
 };
 }; // namespace detail
 
 // only for non-array types
 template<typename T, typename... Args>
-Unique_ptr<typename detail::make_unique_helper<T>::Single_object>
+typename detail::make_unique_helper<T>::single_t
 make_unique(Args&&... args)
 {
     return Unique_ptr<T>(new T(std::forward<Args>(args)...));
@@ -569,7 +569,7 @@ make_unique(Args&&... args)
 
 // only for array types with unknown bound
 template<typename T>
-Unique_ptr<typename detail::make_unique_helper<T>::Array_unknown_bound>
+typename detail::make_unique_helper<T>::array_t
 make_unique(std::size_t size)
 {
     return Unique_ptr<T>(new typename std::remove_extent<T>::type[size]);
@@ -577,9 +577,116 @@ make_unique(std::size_t size)
 
 // only for array types with known bound
 template<typename T, typename... Args>
-Unique_ptr<typename detail::make_unique_helper<T>::Array_known_bound>
+typename detail::make_unique_helper<T>::invalid_t
 make_unique(Args&&...) = delete;
 
+// compare
+template<typename T1, typename D1, typename T2, typename D2>
+bool operator==(const Unique_ptr<T1, D1>& x, const Unique_ptr<T2, D2>& y)
+{
+    return x.get() == y.get();
+}
+
+template<typename T1, typename D1, typename T2, typename D2>
+bool operator!=(const Unique_ptr<T1, D1>& x, const Unique_ptr<T2, D2>& y)
+{
+    return x.get() != y.get();
+}
+template<typename T1, typename D1, typename T2, typename D2>
+bool operator<(const Unique_ptr<T1, D1>& x, const Unique_ptr<T2, D2>& y)
+{
+    using ptr_t = std::common_type_t<typename Unique_ptr<T1, D1>::pointer,
+                                     typename Unique_ptr<T2, D2>::pointer>;
+    return std::less<ptr_t>(x.get(), y.get());
+}
+template<typename T1, typename D1, typename T2, typename D2>
+bool operator<=(const Unique_ptr<T1, D1>& x, const Unique_ptr<T2, D2>& y)
+{
+    return !(y < x);
+}
+template<typename T1, typename D1, typename T2, typename D2>
+bool operator>(const Unique_ptr<T1, D1>& x, const Unique_ptr<T2, D2>& y)
+{
+    return y < x;
+}
+
+template<typename T1, typename D1, typename T2, typename D2>
+bool operator>=(const Unique_ptr<T1, D1>& x, const Unique_ptr<T2, D2>& y)
+{
+    return !(x < y);
+}
+
+template<typename T, typename D>
+bool operator==(const Unique_ptr<T, D>& x, std::nullptr_t)
+{
+    return !(x);
+}
+
+template<typename T, typename D>
+bool operator==( std::nullptr_t, const Unique_ptr<T, D>& x)
+{
+    return !(x);
+}
+
+template<typename T, typename D>
+bool operator!=(const Unique_ptr<T, D>& x, std::nullptr_t)
+{
+    return static_cast<bool>(x);
+}
+
+template<typename T, typename D>
+bool operator!=( std::nullptr_t, const Unique_ptr<T, D>& x)
+{
+    return static_cast<bool>(x);
+}
+
+template<typename T, typename D>
+bool operator<(const Unique_ptr<T, D>& x,std::nullptr_t)
+{
+    return std::less<typename Unique_ptr<T, D>::pointer>(x.get(), nullptr);
+}
+
+template<typename T, typename D>
+bool operator<(std::nullptr_t, const Unique_ptr<T, D>& x)
+{
+    return std::less<typename Unique_ptr<T, D>::pointer>( nullptr, x.get());
+}
+
+template<typename T, typename D>
+bool operator<=(const Unique_ptr<T, D>& x,std::nullptr_t)
+{
+    return !(nullptr < x);
+}
+
+template<typename T, typename D>
+bool operator<=(std::nullptr_t, const Unique_ptr<T, D>& x)
+{
+    return !(x < nullptr);
+}
+
+template<typename T, typename D>
+bool operator>(const Unique_ptr<T, D>& x,std::nullptr_t)
+{
+    return nullptr < x;
+}
+
+template<typename T, typename D>
+bool operator>(std::nullptr_t, const Unique_ptr<T, D>& x)
+{
+    return x < nullptr;
+}
+
+template<typename T, typename D>
+bool operator>=(const Unique_ptr<T, D>& x,std::nullptr_t)
+{
+    return !(x < nullptr);
+}
+
+template<typename T, typename D>
+bool operator>=(std::nullptr_t, const Unique_ptr<T, D>& x)
+{
+    return !(nullptr < x);
+}
 } // namespce cyy
 
 #endif // UNIQUE_PTR

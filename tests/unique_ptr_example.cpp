@@ -264,6 +264,16 @@ int main()
         }
 
         // compile error
-        //cyy::make_unique<int[3]>(1,2,3,4);
+        // cyy::make_unique<int[3]>(1,2,3,4);
+    }
+    {
+        std::cout << "\nTests for compare:\n\n";
+        cyy::Unique_ptr<int> p1(new int(42));
+        cyy::Unique_ptr<int> p2(new int(42));
+    
+        std::cout << "p1 == p1: " << (p1 == p1) << '\n';
+    
+        // p1 and p2 point to different memory locations, so p1 != p2
+        std::cout << "p1 == p2: " << (p1 == p2) << '\n';
     }
 }
