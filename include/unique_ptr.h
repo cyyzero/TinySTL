@@ -536,12 +536,49 @@ private:
     detail::Unique_ptr_data<pointer, deleter_type> data;
 };
 
-// create a unique pointer that manages a new object
+// create a unique pointer
+
+namespace detail
+{
+template<typename T>
+struct make_unique_helper
+{
+    using Single_object = T;
+};
+
+template<typename T>
+struct make_unique_helper<T[]>
+{
+    using Array_unknown_bound = T[];
+};
+
+template<typename T, std::size_t Size>
+struct make_unique_helper<T[Size]>
+{
+    using Array_known_bound = T[Size];
+};
+}; // namespace detail
+
+// only for non-array types
 template<typename T, typename... Args>
-Unique_ptr<T> make_unique(Args&&... args)
+Unique_ptr<typename detail::make_unique_helper<T>::Single_object>
+make_unique(Args&&... args)
 {
     return Unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+
+// only for array types with unknown bound
+template<typename T>
+Unique_ptr<typename detail::make_unique_helper<T>::Array_unknown_bound>
+make_unique(std::size_t size)
+{
+    return Unique_ptr<T>(new typename std::remove_extent<T>::type[size]);
+}
+
+// only for array types with known bound
+template<typename T, typename... Args>
+Unique_ptr<typename detail::make_unique_helper<T>::Array_known_bound>
+make_unique(Args&&...) = delete;
 
 } // namespce cyy
 
