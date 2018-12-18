@@ -12,6 +12,8 @@
 namespace cyy
 {
 
+namespace detail
+{
 // Base class for Vector, used for allocating
 template<typename T, typename Alloc>
 class Vector_base
@@ -20,9 +22,9 @@ class Vector_base
                   "Allocator::value_type and T must be the same type.");
 
 public:
-    using allocator_type   = Alloc;
-    using allocator_traits = cyy::allocator_traits<Alloc>;
-    using pointer          = typename allocator_traits::pointer;
+    using Alloc_type       = Alloc;
+    using Alloc_traits     = cyy::allocator_traits<Alloc>;
+    using pointer          = typename Alloc_traits::pointer;
 
 protected:
     struct Vector_data
@@ -33,7 +35,7 @@ protected:
         {
         }
 
-        Vector_data(const allocator_type& alloc)
+        Vector_data(const Alloc_type& alloc)
             : Alloc(alloc), start(), finish(), end_of_storage()
         {
         }
@@ -61,7 +63,7 @@ protected:
     {
     }
 
-    Vector_base(const allocator_type& alloc)
+    Vector_base(const Alloc_type& alloc)
         : data_impl(alloc)
     {
     }
@@ -72,7 +74,7 @@ protected:
         create_storage(count);
     }
 
-    Vector_base(std::size_t count, const allocator_type& alloc)
+    Vector_base(std::size_t count, const Alloc_type& alloc)
         : data_impl(alloc)
     {
         create_storage(count);
@@ -84,7 +86,7 @@ protected:
         data_impl.swap(other.data_impl);
     }
 
-    Vector_base(Vector_base&& other, const allocator_type& alloc)
+    Vector_base(Vector_base&& other, const Alloc_type& alloc)
         : data_impl(alloc)
     {
         data_impl.swap(other.data_impl);
@@ -97,28 +99,28 @@ protected:
 
     pointer allocate(std::size_t n)
     {
-        return n != 0 ? allocator_traits::allocate(static_cast<allocator_type&>(data_impl), n) : pointer();
+        return n != 0 ? Alloc_traits::allocate(static_cast<Alloc_type&>(data_impl), n) : pointer();
     }
 
     void deallocate(pointer p, std::size_t n)
     {
         if (p)
-            allocator_traits::deallocate(static_cast<allocator_type&>(data_impl), p, n);
+            Alloc_traits::deallocate(static_cast<Alloc_type&>(data_impl), p, n);
     }
 
-    allocator_type& get_alloc_ref() noexcept
+    Alloc_type& get_alloc_ref() noexcept
     {
-        return static_cast<allocator_type&>(data_impl);
+        return static_cast<Alloc_type&>(data_impl);
     }
 
-    const allocator_type& get_alloc_ref() const noexcept
+    const Alloc_type& get_alloc_ref() const noexcept
     {
-        return static_cast<const allocator_type&>(data_impl);
+        return static_cast<const Alloc_type&>(data_impl);
     }
 
-    allocator_type get_allocator() const noexcept
+    Alloc_type get_allocator() const noexcept
     {
-        return allocator_type();
+        return Alloc_type();
     }
 
     Vector_data data_impl;
@@ -130,19 +132,20 @@ private:
         data_impl.finish = data_impl.start;
         data_impl.end_of_storage = data_impl.start + count;
     }
-};
+
+}; // class Vector_base
+} // namespace detail
 
 template<typename T, typename Alloc = cyy::allocator<T>>
 class Vector
-    : public Vector_base<T, Alloc>
+    : public detail::Vector_base<T, Alloc>
 {
-    using Base = Vector_base<T, Alloc>;
+    using Base = detail::Vector_base<T, Alloc>;
     using Base::allocate;
     using Base::deallocate;
     using Base::data_impl;
     using Base::get_alloc_ref;
-    using allocator_traits = typename Base::allocator_traits;
-
+    using Alloc_traits = typename Base::Alloc_traits;
 
 public:
     using value_type             = T;
@@ -151,10 +154,10 @@ public:
     using difference_type        = std::ptrdiff_t;
     using reference              = value_type&;
     using const_reference        = const value_type&;
-    using pointer                = typename allocator_traits::pointer;
-    using const_pointer          = typename allocator_traits::const_pointer;
-    using iterator               = typename allocator_traits::pointer;
-    using const_iterator         = typename allocator_traits::const_pointer;
+    using pointer                = typename Alloc_traits::pointer;
+    using const_pointer          = typename Alloc_traits::const_pointer;
+    using iterator               = typename Alloc_traits::pointer;
+    using const_iterator         = typename Alloc_traits::const_pointer;
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -233,7 +236,7 @@ public:
     {
         // TODO: handle exception and optimize time
         // size_type size = rhs.size();
-        if (allocator_traits::propagate_on_container_copy_assignment::value)
+        if (Alloc_traits::propagate_on_container_copy_assignment::value)
         {
             get_alloc_ref() = rhs.get_alloc_ref();
         }
@@ -246,7 +249,7 @@ public:
 
     Vector& operator=(Vector&& rhs)
     {
-        if (allocator_traits::propagate_on_container_copy_assignment::value)
+        if (Alloc_traits::propagate_on_container_copy_assignment::value)
         {
             get_alloc_ref() = std::move(rhs.get_alloc_ref());
         }
@@ -564,7 +567,7 @@ public:
         {
             expand();
         }
-        allocator_traits::construct(get_alloc_ref(), data_impl.finish++, value);
+        Alloc_traits::construct(get_alloc_ref(), data_impl.finish++, value);
     }
 
     /// value is moved into the new element.
@@ -574,13 +577,13 @@ public:
         {
             expand();
         }
-        allocator_traits::construct(get_alloc_ref(), data_impl.finish++, std::move(value));
+        Alloc_traits::construct(get_alloc_ref(), data_impl.finish++, std::move(value));
     }
 
     // removes the last element
     void pop_back()
     {
-        allocator_traits::destroy(get_alloc_ref(), data_impl.finish--);
+        Alloc_traits::destroy(get_alloc_ref(), data_impl.finish--);
     }
 
     // changes the number of elements stored
@@ -635,7 +638,7 @@ public:
     // exchange contents
     void swap(Vector& other)
     {
-        if (allocator_traits::propagate_on_container_swap::value)
+        if (Alloc_traits::propagate_on_container_swap::value)
             std::swap(get_alloc_ref(), other.get_alloc_ref());
         data_impl.swap(other.data_impl);
     }
@@ -812,7 +815,7 @@ private:
             try
             {
                 cyy::uninitialized_move_a(data_impl.start, data_impl.start + dist, start, get_alloc_ref());
-                allocator_traits::construct(get_alloc_ref(), start+dist, std::forward<Args>(args)...);
+                Alloc_traits::construct(get_alloc_ref(), start+dist, std::forward<Args>(args)...);
                 cyy::uninitialized_move_a(data_impl.start+dist, data_impl.finish, start+dist+1, get_alloc_ref());
             }
             catch (...)
@@ -829,7 +832,7 @@ private:
         }
         else
         {
-            allocator_traits::construct(get_alloc_ref(), data_impl.finish, std::move(*(data_impl.finish-1)));
+            Alloc_traits::construct(get_alloc_ref(), data_impl.finish, std::move(*(data_impl.finish-1)));
             ++data_impl.finish;
             pointer target = data_impl.start + (pos - cbegin());
             std::move_backward(target, data_impl.finish-1, data_impl.finish);
