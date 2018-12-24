@@ -8,19 +8,29 @@ namespace cyy
 {
 namespace detail
 {
-// base class for node
-struct Fwd_list_node_base
-{
-    Fwd_node_base *next;
-};
-
 
 // node of Forward_list
 template<typename T>
 struct Fwd_list_node
-    : Fwd_list_node_base
 {
+    Fwd_list_node() = default;
+    ~Fwd_list_node() = default;
+
     T data;
+    T* next;
+};
+
+// iterator
+template<typename T>
+struct Fwd_list_iterator
+{
+
+};
+
+template<typename T>
+struct Fwd_list_const_iterator
+{
+
 };
 
 // base class for Forward_list
