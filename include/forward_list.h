@@ -17,7 +17,7 @@ struct Fwd_list_node
     ~Fwd_list_node() = default;
 
     T data;
-    T* next;
+    Fwd_list_node<T>* next;
 };
 
 // iterator
@@ -217,7 +217,6 @@ template<typename T, typename Allocator>
 struct Fwd_list_base
 {
     using Alloc_traits = cyy::allocator_traits<Allocator>;
-    // using   cyy::allocator_traits<Allocator>::rebind_alloc<>;
 
 
 }; // class Fwd_list
@@ -243,6 +242,28 @@ public:
     using iterator        = detail::Fwd_list_iterator<T>;
     using const_iterator  = detail::Fwd_list_const_iterator<T>;
 
+    Forward_list() = default;
+
+    explicit Forward_list(const Allocator& alloc);
+
+    Forward_list(size_type count, const T& value, const Allocator& alloc = Allocator());
+
+    explicit Forward_list(size_type count);
+
+    explicit Forward_list(size_type count, const Allocator& alloc = Allocator());
+
+    template<class InputIterator>
+    Forward_list(InputIterator first, InputIterator last, const Allocator& alloc = Allocator());
+
+    Forward_list(const Forward_list& other);
+
+    Forward_list(const Forward_list& other, const Allocator& alloc);
+
+    Forward_list(Forward_list&& other );
+
+    Forward_list(Forward_list&& other, const Allocator& alloc);
+
+    Forward_list(std::initializer_list<T> init, const Allocator& alloc = Allocator());
 }; // class Forward_list
 
 } // namespace cyy
