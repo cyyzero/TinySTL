@@ -8,16 +8,26 @@ namespace cyy
 {
 namespace detail
 {
+// base class of Fwd_list_node
+struct Fwd_list_node_base
+{
+    Fwd_list_node_base()
+        : next(nullptr)
+    {
+    }
+
+    Fwd_list_node_base *next;
+};
 
 // node of Forward_list
 template<typename T>
 struct Fwd_list_node
+    : public Fwd_list_node_base
 {
     Fwd_list_node() = default;
     ~Fwd_list_node() = default;
 
     T data;
-    Fwd_list_node<T>* next;
 };
 
 // iterator
@@ -45,7 +55,7 @@ struct Fwd_list_iterator
     }
 
     explicit
-    Fwd_list_iterator(const Node* n) noexcept
+    Fwd_list_iterator(const Fwd_list_node_base *n) noexcept
         : node(n)
     {
     }
@@ -95,7 +105,7 @@ struct Fwd_list_iterator
         }
     }
 
-    Node *node;
+    Fwd_list_node_base *node;
 };
 
 template<typename T>
@@ -127,7 +137,7 @@ struct Fwd_list_const_iterator
     }
 
     explicit
-    Fwd_list_const_iterator(const Node* n) noexcept
+    Fwd_list_const_iterator(const Fwd_list_node_base *n) noexcept
         : node(n)
     {
     }
@@ -177,7 +187,7 @@ struct Fwd_list_const_iterator
         }
     }
 
-   const Node *node;
+   const Fwd_list_node_base *node;
 };
 
 template<typename T>
