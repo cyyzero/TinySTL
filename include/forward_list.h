@@ -226,19 +226,50 @@ bool operator!=(const Fwd_list_const_iterator<T>& lhs,
 template<typename T, typename Allocator>
 struct Fwd_list_base
 {
-    using Alloc_traits = cyy::allocator_traits<Allocator>;
+    using Node              = Fwd_list_node<T>;
+    using Alloc_traits      = cyy::allocator_traits<Allocator>;
+    using Node_alloc        = Alloc_traits::rebind_alloc<Node>;
+    using Node_alloc_traits = Alloc_traits::rebind_traits<Node>;
+
+protected:
+    struct Fwd_list_impl : public Node_alloc
+    {
+        Fwd_list_impl()
+            : Node_alloc(), head()
+        {
+        }
+
+        Fwd_list_impl(const Node_alloc& alloc)
+            : Node_alloc(alloc), head()
+        {
+        }
+
+        Fwd_list_impl(Node_alloc&& alloc)
+            : Node_alloc(std::move(alloc), head()
+        {
+        }
+
+        ~Fwd_list_impl() = default;
+
+        Fwd_list_node_base head;
+    };
+
+    Fwd_list_impl head_impl;
+
+public:
+    
 
 
 }; // class Fwd_list
 } // namespace detail
 
 template<typename T, typename Allocator = allocator<T>>
-class Forward_list
+class Forward_list : public Fwd_list_base
 {
 private:
-    using Base             = detail::Fwd_list_base<T, Allocator>;
-    using Node             = detail::Fwd_list_node<T>;
-    using Alloc_traits     = cyy::allocator_traits<Allocator>;
+    using Base            = detail::Fwd_list_base<T, Allocator>;
+    using Node            = detail::Fwd_list_node<T>;
+    using Alloc_traits    = cyy::allocator_traits<Allocator>;
 
 public:
     using value_type      = T;
@@ -254,9 +285,15 @@ public:
 
     Forward_list() = default;
 
-    explicit Forward_list(const Allocator& alloc);
+    explicit Forward_list(const Allocator& alloc)
+        : Base(alloc)
+    {
+    }
 
-    Forward_list(size_type count, const T& value, const Allocator& alloc = Allocator());
+    Forward_list(size_type count, const T& value, const Allocator& alloc = Allocator())
+        : Base(alloc)
+    {
+    }
 
     explicit Forward_list(size_type count);
 
