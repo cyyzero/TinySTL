@@ -257,7 +257,17 @@ protected:
     Fwd_list_impl head_impl;
 
 public:
-    
+    Fwd_list_base():
+        : head_impl()
+    {
+    }
+
+    Fwd_list_base(const Node_alloc& alloc)
+        : head_impl(alloc)
+    {
+    }
+
+
 
 
 }; // class Fwd_list
@@ -295,22 +305,42 @@ public:
     {
     }
 
-    explicit Forward_list(size_type count);
+    explicit Forward_list(size_type count)
+        : Base(Allocator())
+    {
+    }
 
-    explicit Forward_list(size_type count, const Allocator& alloc = Allocator());
+    explicit Forward_list(size_type count, const Allocator& alloc = Allocator())
+        : Base(alloc)
+    {
+    }
 
     template<class InputIterator>
-    Forward_list(InputIterator first, InputIterator last, const Allocator& alloc = Allocator());
+    Forward_list(InputIterator first, InputIterator last, const Allocator& alloc = Allocator())
+        : Base(alloc)
+    {
+    }
 
     Forward_list(const Forward_list& other);
 
-    Forward_list(const Forward_list& other, const Allocator& alloc);
+    Forward_list(const Forward_list& other, const Allocator& alloc)
+        : Base(alloc)
+    {
+    }
 
-    Forward_list(Forward_list&& other );
+    Forward_list(Forward_list&& other)
+    {
+    }
 
-    Forward_list(Forward_list&& other, const Allocator& alloc);
+    Forward_list(Forward_list&& other, const Allocator& alloc)
+        : Base(alloc)
+    {
+    }
 
-    Forward_list(std::initializer_list<T> init, const Allocator& alloc = Allocator());
+    Forward_list(std::initializer_list<T> init, const Allocator& alloc = Allocator())
+        : Base(alloc)
+    {
+    }
 }; // class Forward_list
 
 } // namespace cyy
