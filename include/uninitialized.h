@@ -15,7 +15,7 @@ ForwardIterator uninitialized_default_n_a(ForwardIterator first, Size n, Allocat
     {
         for (; n > 0; --n, ++cur)
         {
-            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur));
+            Allocator_traits<Allocator>::construct(alloc, std::addressof(*cur));
         }
         return cur;
     }
@@ -35,7 +35,7 @@ ForwardIterator uninitialized_fill_n_a(ForwardIterator first, Size n, const Valu
     {
         for (; n > 0; --n, ++cur)
         {
-            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), value);
+            Allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), value);
         }
         return cur;
     }
@@ -55,7 +55,7 @@ void uninitialized_fill_a(ForwardIterator first, ForwardIterator last, const Val
     {
         for (; cur != last; ++cur)
         {
-            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), value);
+            Allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), value);
         }
     }
     catch (...)
@@ -75,7 +75,7 @@ ForwardIterator uninitialized_copy_a(InputIterator first, InputIterator last,
     {
         for (; first != last; ++first, ++cur)
         {
-            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), *first);
+            Allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), *first);
         }
         return cur;
     }
@@ -96,7 +96,7 @@ ForwardIterator uninitialized_move_a(InputIterator first, InputIterator last,
     {
         for (; first != last; ++first, ++cur)
         {
-            allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), std::move(*first));
+            Allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), std::move(*first));
         }
         return cur;
     }

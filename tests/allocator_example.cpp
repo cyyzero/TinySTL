@@ -5,14 +5,14 @@
  
 int main()
 {
-    cyy::allocator<int> a1;   // int 的默认分配器
+    cyy::Allocator<int> a1;   // int 的默认分配器
     int* a = a1.allocate(1);  // 一个 int 的空间
     a1.construct(a, 7);       // 构造 int
     std::cout << a[0] << '\n';
     a1.deallocate(a, 1);      // 解分配一个 int 的空间
  
     // string 的默认分配器
-    cyy::allocator<std::string> a2;
+    cyy::Allocator<std::string> a2;
  
     // 同上，但以 a1 的重绑定获取
     decltype(a1)::rebind<std::string>::other a2_1;

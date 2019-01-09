@@ -23,7 +23,7 @@ class Vector_base
 
 public:
     using Alloc_type       = Alloc;
-    using Alloc_traits     = cyy::allocator_traits<Alloc>;
+    using Alloc_traits     = cyy::Allocator_traits<Alloc>;
     using pointer          = typename Alloc_traits::pointer;
 
 protected:
@@ -136,7 +136,7 @@ private:
 }; // class Vector_base
 } // namespace detail
 
-template<typename T, typename Alloc = cyy::allocator<T>>
+template<typename T, typename Alloc = cyy::Allocator<T>>
 class Vector
     : public detail::Vector_base<T, Alloc>
 {

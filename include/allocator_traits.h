@@ -38,7 +38,7 @@ struct rebind_alloc_helper<Alloc<U, Args...>, T, false>
 };
 
 template<typename Alloc>
-struct allocator_traits
+struct Allocator_traits
 {
     using allocator_type = Alloc;
     using value_type = typename Alloc::value_type;
@@ -96,7 +96,7 @@ ALIAS_USING_SFINAE(propagate_on_container_swap, std::false_type)
     using rebind_alloc = typename rebind_alloc_helper<Alloc, T>::type;
 
     template<typename T>
-    using rebind_traits = allocator_traits<rebind_alloc<T>>;
+    using rebind_traits = Allocator_traits<rebind_alloc<T>>;
 
 private:
     // allocate_helper, use SFINAE

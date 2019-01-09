@@ -10,7 +10,7 @@
 namespace cyy
 {
 template <typename T>
-class allocator
+class Allocator
 {
 public:
     using value_type      = T;
@@ -23,20 +23,20 @@ public:
     using propagate_on_container_move_assignment = std::true_type;
 
     // constructors
-    allocator() noexcept { }
+    Allocator() noexcept { }
 
-    allocator(const allocator&) noexcept { }
+    Allocator(const Allocator&) noexcept { }
 
     template<typename P>
-    allocator(const allocator<P>&) noexcept { }
+    Allocator(const Allocator<P>&) noexcept { }
 
     // destructor
-    ~allocator()  noexcept { }
+    ~Allocator()  noexcept { }
 
     template<typename T1>
     struct rebind
     {
-        using other = allocator<T1>;
+        using other = Allocator<T1>;
     };
 
     pointer allocate(size_type n, void *p = nullptr)
@@ -83,31 +83,31 @@ public:
 };
 
 template<typename T>
-inline bool operator==(const allocator<T>&, const allocator<T>&) noexcept
+inline bool operator==(const Allocator<T>&, const Allocator<T>&) noexcept
 {
     return true;
 }
 
 template<typename T1, typename T2>
-inline bool operator==(const allocator<T1>&, const allocator<T2>&) noexcept
+inline bool operator==(const Allocator<T1>&, const Allocator<T2>&) noexcept
 {
     return true;
 }
 
 template<typename T>
-inline bool operator!=(const allocator<T>&, const allocator<T>&) noexcept
+inline bool operator!=(const Allocator<T>&, const Allocator<T>&) noexcept
 {
     return false;
 }
 
 template<typename T1, typename T2>
-inline bool operator!=(const allocator<T1>&, const allocator<T2>&) noexcept
+inline bool operator!=(const Allocator<T1>&, const Allocator<T2>&) noexcept
 {
     return false;
 }
 
 template<>
-class allocator<void>
+class Allocator<void>
 {
 public:
     using pointer = void*;

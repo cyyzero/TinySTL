@@ -57,12 +57,12 @@ void Destroy(ForwardIterator first, ForwardIterator last, Allocator& alloc)
 {
     for (; first != last; ++first)
     {
-        allocator_traits<Allocator>::destroy(alloc, std::addressof(*first));
+        Allocator_traits<Allocator>::destroy(alloc, std::addressof(*first));
     }
 }
 
 template<typename ForwardIterator, typename T>
-void Destroy(ForwardIterator first, ForwardIterator last, allocator<T>&)
+void Destroy(ForwardIterator first, ForwardIterator last, Allocator<T>&)
 {
     Destroy(first, last);
 }
