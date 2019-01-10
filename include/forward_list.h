@@ -227,7 +227,7 @@ template<typename T, typename Allocator>
 struct Fwd_list_base
 {
     using Node              = Fwd_list_node<T>;
-    using Alloc_traits      = cyy::allocator_traits<Allocator>;
+    using Alloc_traits      = cyy::Allocator_traits<Allocator>;
     using Node_alloc        = Alloc_traits::rebind_alloc<Node>;
     using Node_alloc_traits = Alloc_traits::rebind_traits<Node>;
 
@@ -267,19 +267,28 @@ public:
     {
     }
 
+    Node_alloc& get_node_allocator() noexcept
+    {
+        return static_cast<Node_alloc&>(head_impl);
+    }
 
-
-
+    const Node_alloc& get_node_allocator() const noexcept
+    {
+        return static_cast<const Node_alloc&>(head_impl);
+    }
 }; // class Fwd_list
 } // namespace detail
 
-template<typename T, typename Allocator = allocator<T>>
-class Forward_list : public Fwd_list_base
+template<typename T, typename Allocator = cyy::Allocator<T>>
+class Forward_list : public Fwd_list_base<T, Allocator>
 {
 private:
     using Base            = detail::Fwd_list_base<T, Allocator>;
     using Node            = detail::Fwd_list_node<T>;
-    using Alloc_traits    = cyy::allocator_traits<Allocator>;
+    using Node_base       = detail::Fwd_list_node_base;
+    using Alloc_traits    = cyy::Allocator_traits<Allocator>;
+    using Base::Node_alloc;
+    using Base::Node_alloc_traits;
 
 public:
     using value_type      = T;
@@ -288,43 +297,46 @@ public:
     using difference_type = std::ptrdiff_t;
     using reference       = T&;
     using const_reference = const T&;
-    using pointer         = typename allocator_traits<Allocator>::pointer;
-    using const_pointer   = typename allocator_traits<Allocator>::const_pointer;
+    using pointer         = typename Allocator_traits<Allocator>::pointer;
+    using const_pointer   = typename Allocator_traits<Allocator>::const_pointer;
     using iterator        = detail::Fwd_list_iterator<T>;
     using const_iterator  = detail::Fwd_list_const_iterator<T>;
 
     Forward_list() = default;
 
     explicit Forward_list(const Allocator& alloc)
-        : Base(alloc)
+        : Base(Node_alloc(alloc))
     {
     }
 
     Forward_list(size_type count, const T& value, const Allocator& alloc = Allocator())
-        : Base(alloc)
+        : Base(Node_alloc(alloc))
     {
     }
 
     explicit Forward_list(size_type count)
-        : Base(Allocator())
+        : Base(Node_alloc())
     {
     }
 
     explicit Forward_list(size_type count, const Allocator& alloc = Allocator())
-        : Base(alloc)
+        : Base(Node_alloc(alloc))
     {
     }
 
     template<class InputIterator>
     Forward_list(InputIterator first, InputIterator last, const Allocator& alloc = Allocator())
-        : Base(alloc)
+        : Base(Node_alloc(alloc))
     {
     }
 
-    Forward_list(const Forward_list& other);
+    Forward_list(const Forward_list& other)
+        : Base(other.get_node_allocator())
+    {
+    }
 
     Forward_list(const Forward_list& other, const Allocator& alloc)
-        : Base(alloc)
+        : Base(Node_alloc(alloc))
     {
     }
 
@@ -333,12 +345,12 @@ public:
     }
 
     Forward_list(Forward_list&& other, const Allocator& alloc)
-        : Base(alloc)
+        : Base(Node_alloc(alloc))
     {
     }
 
     Forward_list(std::initializer_list<T> init, const Allocator& alloc = Allocator())
-        : Base(alloc)
+        : Base(Node_alloc(alloc))
     {
     }
 }; // class Forward_list
