@@ -267,6 +267,22 @@ public:
     {
     }
 
+    Fwd_list_base(Fwd_list_base&& list, const Node_alloc& alloc)
+    {
+    }
+
+    Fwd_list_base(Fwd_list_base&& list)
+        : head_impl(std::move(list.get_node_allocator()))
+    {
+        head_impl.head.next = list.head_impl.head.next;
+        list.head_impl.head.next = nullptr;
+    }
+
+    ~Fwd_list_base()
+    {
+        
+    }
+
     Node_alloc& get_node_allocator() noexcept
     {
         return static_cast<Node_alloc&>(head_impl);
