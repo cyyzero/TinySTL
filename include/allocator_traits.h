@@ -51,7 +51,7 @@ private:                                                     \
                                                              \
     static T2 T1##test(...);                                 \
                                                              \
-    using _##T1 = decltype(T1##test(nullptr));               \
+    using _##T1 = decltype(T1##test((Alloc*)nullptr));       \
 public:                                                      \
 
 // pointer: Alloc::pointer if present, otherwise value_type*
