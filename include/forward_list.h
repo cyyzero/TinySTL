@@ -8,6 +8,37 @@ namespace cyy
 {
 namespace detail
 {
+// aligned buffer used in Fwd_list_node
+template<typename T>
+struct aligned_buffer
+    : public std::aligned_storage<sizeof(T), alignof(T)>
+{
+    using storage = std::aligned_storage<sizeof(T), alignof(T)>;
+
+    aligned_buffer() = default;
+
+    void* address() noexcept
+    {
+        return static_cast<void*>(&storage);
+    }
+
+    const void* address() const noexcept
+    {
+        return static_cast<const void*>(&storage);
+    }
+
+    T* pointer() noexcept
+    {
+        return static_cast<T*>(&storage);
+    }
+
+    const T* pointer() const noexcept
+    {
+        return static_cast<const T*>(&storage);
+    }
+
+}; // class aligned_buffer
+
 // base class of Fwd_list_node
 struct Fwd_list_node_base
 {
@@ -27,7 +58,7 @@ struct Fwd_list_node
     Fwd_list_node() = default;
     ~Fwd_list_node() = default;
 
-    T data;
+    aligned_buffer<T> storage;
 };
 
 // iterator
@@ -228,11 +259,12 @@ struct Fwd_list_base
 {
     using Node              = Fwd_list_node<T>;
     using Alloc_traits      = cyy::Allocator_traits<Allocator>;
-    using Node_alloc        = Alloc_traits::rebind_alloc<Node>;
-    using Node_alloc_traits = Alloc_traits::rebind_traits<Node>;
+    using Node_alloc        = Alloc_traits:: template rebind_alloc<Node>;
+    using Node_alloc_traits = Alloc_traits:: template rebind_traits<Node>;
 
 protected:
-    struct Fwd_list_impl : public Node_alloc
+    struct Fwd_list_impl 
+        : public Node_alloc
     {
         Fwd_list_impl()
             : Node_alloc(), head()
@@ -292,7 +324,33 @@ public:
     {
         return static_cast<const Node_alloc&>(head_impl);
     }
-}; // class Fwd_list
+
+protected:
+    Node* get_node()
+    {
+        auto ptr = Node_alloc_traits::allocate(get_node_allocator(), 1);
+        return std::addressof(*ptr);
+    }
+
+    template<typename... Args>
+    Node* create_node(Args... args)
+    {
+        Node* node = get_node();
+        try
+        {
+            Allocator alloc(get_node_allocator());
+            Node_alloc_traits::construct(get_node_allocator(), node);
+            Alloc_traits::construct(alloc, node->pointer(), std::forward<Args>(args)...);
+        }
+        catch (...)
+        {
+            Node_alloc_traits::deallocate(get_node_allocator(), node, 1);
+            throw;
+        }
+        return node;
+    }
+
+}; // class Fwd_list_base
 } // namespace detail
 
 template<typename T, typename Allocator = cyy::Allocator<T>>
