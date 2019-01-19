@@ -149,7 +149,7 @@ private:
     }
 
     template<typename T, typename... Args>
-    static std::enable_if_t<!construct_helper<Alloc, T, Args...>::type::value&& std::is_constructible_v<T, Args...>>
+    static std::enable_if_t<!construct_helper<Alloc, T, Args...>::type::value && std::is_constructible_v<T, Args...>>
     construct_impl(Alloc& a, T* p, Args&&... args)
     {
         ::new(static_cast<void*>(p)) T(std::forward<Args>(args)...);
