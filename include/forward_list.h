@@ -300,7 +300,26 @@ public:
     }
 
     Fwd_list_base(Fwd_list_base&& list, const Node_alloc& alloc)
+        : head_impl(alloc)
     {
+        if (list.get_node_allocator() == alloc)
+        {
+            head_impl.head.next = list.head_impl.head.next;
+            list.head_impl.head.next = nullptr;
+        }
+        else
+        {
+            head_impl.head.next = nullptr;
+            Fwd_list_node_base *to = &this->head_impl.head;
+            Node *curr = static_cast<Node*>(list.head_impl.head.next);
+
+            while (curr)
+            {
+                to->next = create_node(*curr->pointer());
+                to = to->next;
+                curr = static_cast<Node*>(curr->next);
+            }
+        }
     }
 
     Fwd_list_base(Fwd_list_base&& list)
