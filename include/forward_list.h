@@ -103,12 +103,12 @@ struct Fwd_list_iterator
 
     reference operator*() const noexcept
     {
-        return node->data;
+        return *static_cast<Node*>(node)->valptr();
     }
 
     pointer operator->() const noexcept
     {
-        return &node->data;
+        return static_cast<Node*>(node)->valptr();
     }
 
     Self& operator++() noexcept
@@ -185,12 +185,12 @@ struct Fwd_list_const_iterator
 
     reference operator*() const noexcept
     {
-        return node->data;
+        return *static_cast<const Node*>(node)->valptr();
     }
 
     pointer operator->() const noexcept
     {
-        return &node->data;
+        return static_cast<const Node*>(node)->valptr();
     }
 
     Self& operator++() noexcept
