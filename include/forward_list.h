@@ -13,7 +13,7 @@ template<typename T>
 struct aligned_buffer
     : public std::aligned_storage<sizeof(T), alignof(T)>
 {
-    using storage = std::aligned_storage<sizeof(T), alignof(T)>;
+    typename std::aligned_storage<sizeof(T), alignof(T)>::type storage;
 
     aligned_buffer() = default;
 
@@ -29,12 +29,12 @@ struct aligned_buffer
 
     T* pointer() noexcept
     {
-        return static_cast<T*>(&storage);
+        return static_cast<T*>(address());
     }
 
     const T* pointer() const noexcept
     {
-        return static_cast<const T*>(&storage);
+        return static_cast<const T*>(address());
     }
 
 }; // class aligned_buffer
@@ -89,14 +89,13 @@ struct Fwd_list_iterator
     {
     }
 
-    explicit
     Fwd_list_iterator(const Self& it) noexcept
         : node(it.node)
     {
     }
 
     explicit
-    Fwd_list_iterator(const Fwd_list_node_base *n) noexcept
+    Fwd_list_iterator(Fwd_list_node_base *n) noexcept
         : node(n)
     {
     }
@@ -269,8 +268,8 @@ struct Fwd_list_base
 {
     using Node              = Fwd_list_node<T>;
     using Alloc_traits      = cyy::Allocator_traits<Allocator>;
-    using Node_alloc        = Alloc_traits:: template rebind_alloc<Node>;
-    using Node_alloc_traits = Alloc_traits:: template rebind_traits<Node>;
+    using Node_alloc        = typename Alloc_traits:: template rebind_alloc<Node>;
+    using Node_alloc_traits = typename Alloc_traits:: template rebind_traits<Node>;
 
     using iterator          = Fwd_list_iterator<T>;
     using const_iterator    = Fwd_list_const_iterator<T>;
@@ -290,7 +289,7 @@ protected:
         }
 
         Fwd_list_impl(Node_alloc&& alloc)
-            : Node_alloc(std::move(alloc), head()
+            : Node_alloc(std::move(alloc)), head()
         {
         }
 
@@ -302,7 +301,7 @@ protected:
     Fwd_list_impl head_impl;
 
 public:
-    Fwd_list_base():
+    Fwd_list_base()
         : head_impl()
     {
     }
@@ -344,9 +343,10 @@ public:
 
     ~Fwd_list_base()
     {
-        erase_after(head_impl.head.next);
+        erase_after(&head_impl.head, nullptr);
     }
 
+protected:
     template<typename... Args>
     Fwd_list_node_base* insert_after(const_iterator pos, Args&&... args)
     {
@@ -357,19 +357,12 @@ public:
         return node;
     }
 
-    void put_node(Node* p)
-    {
-        using Ptr = typename Node_alloc_traits::pointer;
-        auto ptr = cyy::pointer_traits<Ptr>::pointer_to(*p);
-        Node_alloc_traits::deallocate(get_node_allocator(), ptr, 1);
-    }
-
     Fwd_list_node_base* erase_after(Fwd_list_node_base* pos)
     {
         Node* curr= static_cast<Node*>(pos->next);
         pos->next = curr->next;
         Allocator alloc(get_node_allocator());
-        cyy::Allocator_traits<Allocator>::destroy(alloc, curr.valptr());
+        cyy::Allocator_traits<Allocator>::destroy(alloc, curr->valptr());
         Node_alloc_traits::destroy(get_node_allocator(), curr);
         put_node(curr);
         return curr->next;
@@ -380,11 +373,12 @@ public:
         Node* curr = static_cast<Node*>(pos->next);
         while (curr != last)
         {
+            Node* tmp = static_cast<Node*>(curr->next);
             Allocator alloc(get_node_allocator());
-            cyy::Allocator_traits<Allocator>::destroy(alloc, curr.valptr());
+            cyy::Allocator_traits<Allocator>::destroy(alloc, curr->valptr());
             Node_alloc_traits::destroy(get_node_allocator(), curr);
             put_node(curr);
-            curr = static_cast<Node*>(curr->next);
+            curr = tmp;
         }
         pos->next = last;
         return last;
@@ -400,11 +394,17 @@ public:
         return static_cast<const Node_alloc&>(head_impl);
     }
 
-protected:
     Node* get_node()
     {
         auto ptr = Node_alloc_traits::allocate(get_node_allocator(), 1);
         return std::addressof(*ptr);
+    }
+
+    void put_node(Node* p)
+    {
+        using Ptr = typename Node_alloc_traits::pointer;
+        auto ptr = cyy::pointer_traits<Ptr>::pointer_to(*p);
+        Node_alloc_traits::deallocate(get_node_allocator(), ptr, 1);
     }
 
     template<typename... Args>
@@ -415,11 +415,11 @@ protected:
         {
             Allocator alloc(get_node_allocator());
             Node_alloc_traits::construct(get_node_allocator(), node);
-            Alloc_traits::construct(alloc, node->pointer(), std::forward<Args>(args)...);
+            Alloc_traits::construct(alloc, node->valptr(), std::forward<Args>(args)...);
         }
         catch (...)
         {
-            Node_alloc_traits::deallocate(get_node_allocator(), node, 1);
+            put_node(node);
             throw;
         }
         return node;
@@ -429,15 +429,18 @@ protected:
 } // namespace detail
 
 template<typename T, typename Allocator = cyy::Allocator<T>>
-class Forward_list : public Fwd_list_base<T, Allocator>
+class Forward_list : public detail::Fwd_list_base<T, Allocator>
 {
 private:
     using Base            = detail::Fwd_list_base<T, Allocator>;
     using Node            = detail::Fwd_list_node<T>;
     using Node_base       = detail::Fwd_list_node_base;
     using Alloc_traits    = cyy::Allocator_traits<Allocator>;
-    using Base::Node_alloc;
-    using Base::Node_alloc_traits;
+
+    using typename Base::Node_alloc;
+    using typename Base::Node_alloc_traits;
+    using Base::create_node;
+    using Base::head_impl;
 
 public:
     using value_type      = T;
@@ -459,7 +462,7 @@ public:
     {
     }
 
-    Forward_list(size_type count, const T& value, const Allocator& alloc = Allocator())
+    Forward_list(size_type count, const value_type& value, const Allocator& alloc = Allocator())
         : Base(Node_alloc(alloc))
     {
         fill_initialize(count, value);
@@ -478,7 +481,7 @@ public:
         default_initialize(count);
     }
 
-    template<class InputIterator>
+    template<typename InputIterator>
     Forward_list(InputIterator first, InputIterator last, const Allocator& alloc = Allocator())
         : Base(Node_alloc(alloc))
     {
@@ -510,6 +513,76 @@ public:
     Forward_list(std::initializer_list<T> init, const Allocator& alloc = Allocator())
         : Base(Node_alloc(alloc))
     {
+        range_initialize(init.begin(), init.end());
+    }
+
+    iterator begin()
+    {
+        return iterator(head_impl.head.next);
+    }
+
+    const_iterator begin() const
+    {
+        return const_iterator(head_impl.head.next);
+    }
+
+    const_iterator cbegin() const
+    {
+        return const_iterator(head_impl.head.next);
+    }
+
+    iterator end()
+    {
+        return iterator(nullptr);
+    }
+
+    const_iterator end() const
+    {
+        return const_iterator(nullptr);
+    }
+
+    const_iterator cend() const
+    {
+        return const_iterator(nullptr);
+    }
+
+private:
+    void default_initialize(size_type count)
+    {
+        Node* curr;
+        Node_base* prev = &head_impl.head;
+        while (count--)
+        {
+            curr = create_node();
+            prev->next = curr;
+            prev = curr;
+        }
+    }
+
+    void fill_initialize(size_type count, const value_type& value)
+    {
+        Node* curr;
+        Node_base* prev = &head_impl.head;
+        while (count--)
+        {
+            curr = create_node(value);
+            prev->next = curr;
+            prev = curr;
+        }
+    }
+
+    template<typename InputIterator>
+    void range_initialize(InputIterator first, InputIterator last)
+    {
+        Node* curr;
+        Node_base* prev = &head_impl.head;
+        while (first != last)
+        {
+            curr = create_node(*first);
+            prev->next = curr;
+            prev = curr;
+            ++first;
+        }
     }
 }; // class Forward_list
 
