@@ -1,6 +1,7 @@
 #ifndef FORWARD_LIST_H
 #define FORWARD_LIST_H
 
+#include <type_traits>
 #include "allocator.h"
 #include "allocator_traits.h"
 
@@ -516,6 +517,50 @@ public:
         range_initialize(init.begin(), init.end());
     }
 
+    ~Forward_list() = default;
+
+    Forward_list& operator=(const Forward_list& other)
+    {
+        if (&other == this)
+            return *this;
+
+        if (Alloc_traits::propagate_on_container_copy_assignment::value)
+        {
+            get_node_allocator() = other.get_node_allocator();
+        }
+
+        erase_after(&head_impl.head, nullptr);
+
+        Node_base* prev = &head_impl.head;
+        Node* curr;
+        for (auto it = other.begin(); it != other.end(); ++it)
+        {
+            curr = other.create_node(*it);
+            prev->next = curr;
+            prev = curr;
+        }
+
+        return *this;
+    }
+
+    Forward_list& operator=(Forward_list&& other)
+    {
+        if (Alloc_traits::propagate_on_container_move_assignment::value)
+        {
+            get_node_allocator() = other.get_node_allocator();
+        }
+
+        constexpr bool is_move = Alloc_traits::propagate_on_container_move_assignment::value &
+                                 get_node_allocator() == other.get_node_allocator()
+        move_assign(std::move(other), std::integral_constant<bool, is_move>());
+        return *this;
+    }
+
+    Forward_list& operator=(std::initializer_list<value_type> ilist)
+    {
+
+    }
+
     iterator begin()
     {
         return iterator(head_impl.head.next);
@@ -582,6 +627,25 @@ private:
             prev->next = curr;
             prev = curr;
             ++first;
+        }
+    }
+
+    void move_assign(Forward_list&& other, std::true_type)
+    {
+        erase_after(&head_impl.head, nullptr);
+        std::swap(head_impl.head.next, other.head_impl.head.next);
+        list.get_node_allocator() = std::move(other.get_node_allocator());
+    }
+
+    void move_assign(Forward_list&& other, std::false_type)
+    {
+        if (get_node_allocator() == other.get_node_allocator())
+        {
+            move_assign(std::move(other), std::true_type);
+        }
+        else
+        {
+            assign(list.begin(), list.end());
         }
     }
 }; // class Forward_list
