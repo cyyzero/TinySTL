@@ -351,10 +351,15 @@ protected:
     template<typename... Args>
     Fwd_list_node_base* insert_after(const_iterator pos, Args&&... args)
     {
-        Node *node = create_node(std::forward<Args>(args)...);
-        Fwd_list_node_base* curr = const_cast<Fwd_list_node_base*>(pos.node);
-        node->next = curr->next;
-        curr->next = node;
+        return insert_after(const_cast<Fwd_list_node_base*>(pos.node), std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    Fwd_list_node_base* insert_after(Fwd_list_node_base* pos, Args&&... args)
+    {
+        Node* node = create_node(std::forward<Args>(args)...);
+        node->next = pos->next;
+        pos->next = node;
         return node;
     }
 
@@ -372,10 +377,10 @@ protected:
     Fwd_list_node_base* erase_after(Fwd_list_node_base* pos, Fwd_list_node_base* last)
     {
         Node* curr = static_cast<Node*>(pos->next);
+        Allocator alloc(get_node_allocator());
         while (curr != last)
         {
             Node* tmp = static_cast<Node*>(curr->next);
-            Allocator alloc(get_node_allocator());
             cyy::Allocator_traits<Allocator>::destroy(alloc, curr->valptr());
             Node_alloc_traits::destroy(get_node_allocator(), curr);
             put_node(curr);
@@ -442,6 +447,9 @@ private:
     using typename Base::Node_alloc_traits;
     using Base::create_node;
     using Base::head_impl;
+    using Base::get_node_allocator;
+    using Base::erase_after;
+    using Base::insert_after;
 
 public:
     using value_type      = T;
@@ -455,6 +463,7 @@ public:
     using iterator        = detail::Fwd_list_iterator<T>;
     using const_iterator  = detail::Fwd_list_const_iterator<T>;
 
+    // constructors
     Forward_list() = default;
 
     explicit
@@ -517,8 +526,10 @@ public:
         range_initialize(init.begin(), init.end());
     }
 
+    // destructor
     ~Forward_list() = default;
 
+    // operator=
     Forward_list& operator=(const Forward_list& other)
     {
         if (&other == this)
@@ -529,17 +540,11 @@ public:
             get_node_allocator() = other.get_node_allocator();
         }
 
-        erase_after(&head_impl.head, nullptr);
-
-        Node_base* prev = &head_impl.head;
-        Node* curr;
-        for (auto it = other.begin(); it != other.end(); ++it)
+        if (get_node_allocator() != other.get_node_allocator())
         {
-            curr = other.create_node(*it);
-            prev->next = curr;
-            prev = curr;
+            erase_after(&head_impl.head, nullptr);
         }
-
+        assign(other.begin(), other.end());
         return *this;
     }
 
@@ -550,15 +555,72 @@ public:
             get_node_allocator() = other.get_node_allocator();
         }
 
-        constexpr bool is_move = Alloc_traits::propagate_on_container_move_assignment::value &
-                                 get_node_allocator() == other.get_node_allocator()
-        move_assign(std::move(other), std::integral_constant<bool, is_move>());
+        if (get_node_allocator() == other.get_node_allocator())
+        {
+            erase_after(&head_impl.head, nullptr);
+            std::swap(head_impl.head.next, other.head_impl.head.next);
+        }
+        else
+        {
+            assign(other.begin(), other.end());
+        }
         return *this;
     }
 
     Forward_list& operator=(std::initializer_list<value_type> ilist)
     {
+        assign(ilist.begin(), ilist.end());
+        return *this;
+    }
 
+    // assign values to the container 
+    void assign(size_type count, const value_type& value)
+    {
+        size_type i = 0;
+        Node_base* it = &head_impl.head;
+        for (;it->next != nullptr && i < count; it = it->next, ++i)
+        {
+            *(static_cast<Node*>(it->next)->valptr()) = value;
+        }
+
+        if (i == count)
+        {
+            erase_after(it, nullptr);
+        }
+        else
+        {
+            for (; i < count; ++i)
+            {
+                it = insert_after(it, value);
+            }
+        }
+    }
+
+    template<typename InputIterator>
+    void assign(InputIterator first, InputIterator last)
+    {
+        Node_base* it = &head_impl.head;
+        for (; it->next != nullptr && first != last; it = it->next, ++first)
+        {
+            *(static_cast<Node*>(it)->valptr()) = *first;
+        }
+
+        if (first == last)
+        {
+            erase_after(it, nullptr);
+        }
+        else
+        {
+            for (; first != last; ++first)
+            {
+                it = insert_after(it, *first);
+            }
+        }
+    }
+
+    void assign(std::initializer_list<value_type> ilist)
+    {
+        assign(ilist.begin(), ilist.end());
     }
 
     iterator begin()
@@ -627,25 +689,6 @@ private:
             prev->next = curr;
             prev = curr;
             ++first;
-        }
-    }
-
-    void move_assign(Forward_list&& other, std::true_type)
-    {
-        erase_after(&head_impl.head, nullptr);
-        std::swap(head_impl.head.next, other.head_impl.head.next);
-        list.get_node_allocator() = std::move(other.get_node_allocator());
-    }
-
-    void move_assign(Forward_list&& other, std::false_type)
-    {
-        if (get_node_allocator() == other.get_node_allocator())
-        {
-            move_assign(std::move(other), std::true_type);
-        }
-        else
-        {
-            assign(list.begin(), list.end());
         }
     }
 }; // class Forward_list
