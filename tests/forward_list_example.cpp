@@ -26,7 +26,7 @@ void display_sizes(const cyy::Forward_list<int> &nums1,
  
 int main() 
 {
-    std::cout << "Tests for ctors and dtors\n";
+    std::cout << "Test for ctors and dtors:\n";
     {
         // c++11 initializer list syntax:
         cyy::Forward_list<std::string> words1 {"the", "frogurt", "is", "also", "cursed"};
@@ -49,7 +49,7 @@ int main()
         std::cout << "words1: " << words1 << '\n';
     }
 
-    std::cout << "Tests for operator=\n";
+    std::cout << "\nTest for operator=:\n";
     {
         cyy::Forward_list<int> nums1 {3, 1, 4, 6, 5, 9};
         cyy::Forward_list<int> nums2 {1, 2, 3}; 
@@ -80,7 +80,7 @@ int main()
         // output 0, 9, 9
     }
 
-    std::cout << "Tests for assign:\n";
+    std::cout << "\nTest for assign:\n";
     {
         cyy::Forward_list<char> characters;
 
@@ -89,5 +89,14 @@ int main()
         for (char c : characters) {
             std::cout << c << '\n';
         } 
+    }
+
+    std::cout << "\nTest for front:\n";
+    {
+        cyy::Forward_list<char> letters {'o', 'm', 'g', 'w', 't', 'f'};
+    
+        // if (!letters.empty()) {
+            std::cout << "The first character is: " << letters.front() << '\n';
+        // }  
     }
 }

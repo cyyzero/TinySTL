@@ -623,6 +623,23 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
+    // returns the associated allocator
+    allocator_type get_allocator() const
+    {
+        return allocator_type(get_node_allocator());
+    }
+
+    // access the first element
+    reference front()
+    {
+        return *static_cast<Node*>(head_impl.head.next)->valptr();
+    }
+
+    const_reference front() const
+    {
+        return *static_cast<Node*>(head_impl.head.next)->valptr();
+    }
+
     iterator begin()
     {
         return iterator(head_impl.head.next);
