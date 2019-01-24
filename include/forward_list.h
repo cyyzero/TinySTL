@@ -743,12 +743,6 @@ public:
         return insert_after(pos, ilist.begin(), ilist.end());
     }
 
-    // insert an element to the beginning
-    void push_front(const value_type& value)
-    {
-        insert_after_impl(&head_impl.head, value);
-    }
-
     // construct elements in-place after an element
     template<typename... Args>
     iterator emplace_back(const_iterator pos, Args&&... args)
@@ -767,9 +761,46 @@ public:
         return iterator(erase_after_impl(const_cast<Node_base*>(first.node), const_cast<Node_base*>(last.node)));
     }
 
+    // insert an element to the beginning
+    void push_front(const value_type& value)
+    {
+        insert_after_impl(&head_impl.head, value);
+    }
+
     void push_front(value_type&& value)
     {
         insert_after_impl(&head_impl.head, std::move(value));
+    }
+
+    // construct an element in-place at the beginning
+    template<typename... Args>
+    void emplace_back(Args&&... args)
+    {
+        insert_after_impl(&head_impl.head, std::forward<Args>(args)...);
+    }
+
+    // remove the first element
+    void pop_front()
+    {
+        erase_after_impl(&head_impl.head);
+    }
+
+    // changes the number of elements stored
+    void resize(size_type count)
+    {
+        resize_impl(count);
+    }
+
+    void resize(size_type count, const value_type& value)
+    {
+        resize_impl(count, value);
+    }
+
+    // swap the contents
+    void swap(Forward_list& other)
+    {
+        if (Node_alloc_traits::propagate_on_container_swap::value)
+            std::swap(head_impl.head.next, other.head_impl.head.next);
     }
 
 private:
@@ -808,6 +839,29 @@ private:
             prev->next = curr;
             prev = curr;
             ++first;
+        }
+    }
+
+    template<typename... Args>
+    void resize_impl(size_type count, const Args&... args)
+    {
+        size_type i = 0;
+        Node_base* it = &head_impl.head;
+        for (; i < count && it->next != nullptr; ++i, it = it->next)
+        {
+            continue;
+        }
+
+        if (i < count)
+        {
+            for (; i < count; ++i)
+            {
+                it = insert_after_impl(it, args...);
+            }
+        }
+        else
+        {
+            erase_after_impl(it, nullptr);
         }
     }
 }; // class Forward_list

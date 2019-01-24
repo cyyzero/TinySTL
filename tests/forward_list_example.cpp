@@ -183,4 +183,20 @@ int main()
         for( auto n : l ) std::cout << n << " ";
         std::cout << '\n';
     }
+
+    std::cout << "\nTest for resize:\n";
+    {
+        Forward_list<int> c = {1, 2, 3};
+        std::cout << "The forward_list holds: ";
+        for(auto& el: c) std::cout << el << ' ';
+        std::cout << '\n';
+        c.resize(5);
+        std::cout << "After resize up to 5: ";
+        for(auto& el: c) std::cout << el << ' ';
+        std::cout << '\n';
+        c.resize(2);
+        std::cout << "After resize down to 2: ";
+        for(auto& el: c) std::cout << el << ' ';
+        std::cout << '\n';
+    }
 }
