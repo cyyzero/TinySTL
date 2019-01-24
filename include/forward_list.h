@@ -640,32 +640,50 @@ public:
         return *static_cast<Node*>(head_impl.head.next)->valptr();
     }
 
-    iterator begin()
+    // return an iterator to the element before beginning
+    iterator before_begin() noexcept
+    {
+        return iterator(&head_impl.head);
+    }
+
+    const_iterator before_begin() const noexcept
+    {
+        return const_iterator(&head_impl.head);
+    }
+
+    const_iterator cbefore_begin() const noexcept
+    {
+        return const_iterator(&head_impl.head);
+    }
+
+    iterator begin() noexcept
     {
         return iterator(head_impl.head.next);
     }
 
-    const_iterator begin() const
+    // return an iterator to the beginning
+    const_iterator begin() const noexcept
     {
         return const_iterator(head_impl.head.next);
     }
 
-    const_iterator cbegin() const
+    const_iterator cbegin() const noexcept
     {
         return const_iterator(head_impl.head.next);
     }
 
-    iterator end()
+    // return an iterator to the end
+    iterator end() noexcept
     {
         return iterator(nullptr);
     }
 
-    const_iterator end() const
+    const_iterator end() const noexcept
     {
         return const_iterator(nullptr);
     }
 
-    const_iterator cend() const
+    const_iterator cend() const noexcept
     {
         return const_iterator(nullptr);
     }

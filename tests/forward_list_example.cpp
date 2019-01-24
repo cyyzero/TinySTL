@@ -99,4 +99,23 @@ int main()
             std::cout << "The first character is: " << letters.front() << '\n';
         // }  
     }
+
+    std::cout << "\nTest for begin/end:\n";
+    {
+        cyy::Forward_list<int> ints {1, 2, 4, 8, 16};
+        cyy::Forward_list<std::string> fruits {"orange", "apple", "raspberry"};
+        cyy::Forward_list<char> empty;
+    
+        // Sums all integers in the forward_list ints (if any), printing only the result.
+        int sum = 0;
+        for (auto it = ints.cbegin(); it != ints.cend(); it++)
+            sum += *it;
+        std::cout << "Sum of ints: " << sum << "\n";
+    
+        // Prints the first fruit in the forward_list fruits, without checking if there is one.
+        std::cout << "First fruit: " << *fruits.begin() << "\n";
+    
+        if (empty.begin() == empty.end())
+            std::cout << "forward_list 'empty' is indeed empty.\n";
+    }
 }
