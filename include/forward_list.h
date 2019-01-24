@@ -344,7 +344,7 @@ public:
 
     ~Fwd_list_base()
     {
-        erase_after(&head_impl.head, nullptr);
+        erase_after_impl(&head_impl.head, nullptr);
     }
 
 protected:
@@ -363,7 +363,7 @@ protected:
         return node;
     }
 
-    Fwd_list_node_base* erase_after(Fwd_list_node_base* pos)
+    Fwd_list_node_base* erase_after_impl(Fwd_list_node_base* pos)
     {
         Node* curr= static_cast<Node*>(pos->next);
         pos->next = curr->next;
@@ -374,7 +374,7 @@ protected:
         return curr->next;
     }
 
-    Fwd_list_node_base* erase_after(Fwd_list_node_base* pos, Fwd_list_node_base* last)
+    Fwd_list_node_base* erase_after_impl(Fwd_list_node_base* pos, Fwd_list_node_base* last)
     {
         Node* curr = static_cast<Node*>(pos->next);
         Allocator alloc(get_node_allocator());
@@ -448,7 +448,7 @@ private:
     using Base::create_node;
     using Base::head_impl;
     using Base::get_node_allocator;
-    using Base::erase_after;
+    using Base::erase_after_impl;
     using Base::insert_after_impl;
 
 public:
@@ -542,7 +542,7 @@ public:
 
         if (get_node_allocator() != other.get_node_allocator())
         {
-            erase_after(&head_impl.head, nullptr);
+            erase_after_impl(&head_impl.head, nullptr);
         }
         assign(other.begin(), other.end());
         return *this;
@@ -557,7 +557,7 @@ public:
 
         if (get_node_allocator() == other.get_node_allocator())
         {
-            erase_after(&head_impl.head, nullptr);
+            erase_after_impl(&head_impl.head, nullptr);
             std::swap(head_impl.head.next, other.head_impl.head.next);
         }
         else
@@ -585,7 +585,7 @@ public:
 
         if (i == count)
         {
-            erase_after(it, nullptr);
+            erase_after_impl(it, nullptr);
         }
         else
         {
@@ -607,7 +607,7 @@ public:
 
         if (first == last)
         {
-            erase_after(it, nullptr);
+            erase_after_impl(it, nullptr);
         }
         else
         {
@@ -703,7 +703,7 @@ public:
     // clear the contents
     void clear() noexcept
     {
-        erase_after(&head_impl.head, nullptr);
+        erase_after_impl(&head_impl.head, nullptr);
     }
 
     // insert elements after an element
@@ -747,6 +747,24 @@ public:
     void push_front(const value_type& value)
     {
         insert_after_impl(&head_impl.head, value);
+    }
+
+    // construct elements in-place after an element
+    template<typename... Args>
+    iterator emplace_back(const_iterator pos, Args&&... args)
+    {
+        return iterator(insert_after_impl(pos, std::forward<Args>(args)...));
+    }
+
+    // erase an element after an element
+    iterator erase_after(const_iterator pos)
+    {
+        return iterator(erase_after_impl(const_cast<Node_base*>(pos.node)));
+    }
+
+    iterator erase_after(const_iterator first, const_iterator last)
+    {
+        return iterator(erase_after_impl(const_cast<Node_base*>(first.node), const_cast<Node_base*>(last.node)));
     }
 
     void push_front(value_type&& value)
