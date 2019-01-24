@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
  
+#include "vector.h"
 #include "forward_list.h"
 
 template<typename T>
@@ -23,7 +24,9 @@ void display_sizes(const cyy::Forward_list<int> &nums1,
               << " nums2: " << std::distance(nums2.begin(), nums2.end())
               << " nums3: " << std::distance(nums3.begin(), nums3.end()) << '\n';
 }
- 
+
+using namespace cyy;
+
 int main() 
 {
     std::cout << "Test for ctors and dtors:\n";
@@ -133,5 +136,31 @@ int main()
     {
         cyy::Forward_list<char> s;
         std::cout << "Maximum size of a 'forward_list' is " << s.max_size() << "\n";
+    }
+
+    std::cout << "\nTest for insert_after:\n";
+    {
+        cyy::Forward_list<std::string> words {"the", "frogurt", "is", "also", "cursed"};
+        std::cout << "words: " << words << '\n';                                    
+    
+        // insert_after (2)                                                         
+        auto beginIt = words.begin();                                               
+        words.insert_after(beginIt, "strawberry");                                  
+        std::cout << "words: " << words << '\n';                                    
+    
+        // insert_after (3)                                                         
+        auto anotherIt = beginIt;                                                   
+        ++anotherIt;                                                                
+        anotherIt = words.insert_after(anotherIt, 2, "strawberry");                 
+        std::cout << "words: " << words << '\n';                                    
+    
+        // insert_after (4)
+        Vector<std::string> V = { "apple", "banana", "cherry"};                
+        anotherIt = words.insert_after(anotherIt, V.begin(), V.end());              
+        std::cout << "words: " << words << '\n';                                    
+    
+        // insert_after (5)                                                         
+        words.insert_after(anotherIt, {"jackfruit", "kiwifruit", "lime", "mango"});
+        std::cout << "words: " << words << '\n';                     
     }
 }

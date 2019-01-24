@@ -349,13 +349,13 @@ public:
 
 protected:
     template<typename... Args>
-    Fwd_list_node_base* insert_after(const_iterator pos, Args&&... args)
+    Fwd_list_node_base* insert_after_impl(const_iterator pos, Args&&... args)
     {
-        return insert_after(const_cast<Fwd_list_node_base*>(pos.node), std::forward<Args>(args)...);
+        return insert_after_impl(const_cast<Fwd_list_node_base*>(pos.node), std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    Fwd_list_node_base* insert_after(Fwd_list_node_base* pos, Args&&... args)
+    Fwd_list_node_base* insert_after_impl(Fwd_list_node_base* pos, Args&&... args)
     {
         Node* node = create_node(std::forward<Args>(args)...);
         node->next = pos->next;
@@ -449,7 +449,7 @@ private:
     using Base::head_impl;
     using Base::get_node_allocator;
     using Base::erase_after;
-    using Base::insert_after;
+    using Base::insert_after_impl;
 
 public:
     using value_type      = T;
@@ -591,7 +591,7 @@ public:
         {
             for (; i < count; ++i)
             {
-                it = insert_after(it, value);
+                it = insert_after_impl(it, value);
             }
         }
     }
@@ -613,7 +613,7 @@ public:
         {
             for (; first != last; ++first)
             {
-                it = insert_after(it, *first);
+                it = insert_after_impl(it, *first);
             }
         }
     }
@@ -688,26 +688,70 @@ public:
         return const_iterator(nullptr);
     }
 
+    // check whether the container is empty
     bool empty() const noexcept
     {
         return head_impl.head.next == nullptr;
     }
 
+    // return the maximum possible number of elements
     size_type max_size() const noexcept
     {
         return Node_alloc_traits::max_size(get_node_allocator());
     }
 
+    // clear the contents
+    void clear() noexcept
+    {
+        erase_after(&head_impl.head, nullptr);
+    }
+
+    // insert elements after an element
+    iterator insert_after(const_iterator pos, const value_type& value)
+    {
+        return iterator(insert_after_impl(pos, value));
+    }
+
+    iterator insert_after(const_iterator pos, value_type&& value)
+    {
+        return iterator(insert_after_impl(pos, std::move(value)));
+    }
+
+    iterator insert_after(const_iterator pos, size_type count, const value_type& value)
+    {
+        Node_base* it = const_cast<Node_base*>(pos.node);
+        while (count--)
+        {
+            it = insert_after_impl(it, value);
+        }
+        return iterator(it);
+    }
+
+    template<typename InputIterator>
+    iterator insert_after(const_iterator pos, InputIterator first, InputIterator last)
+    {
+        Node_base* it = const_cast<Node_base*>(pos.node);
+        for (; first != last; ++first)
+        {
+            it = insert_after_impl(it, *first);
+        }
+        return iterator(it);
+    }
+
+    iterator insert_after(const_iterator pos, std::initializer_list<value_type> ilist)
+    {
+        return insert_after(pos, ilist.begin(), ilist.end());
+    }
 
     // insert an element to the beginning
     void push_front(const value_type& value)
     {
-        insert_after(&head_impl.head, value);
+        insert_after_impl(&head_impl.head, value);
     }
 
     void push_front(value_type&& value)
     {
-        insert_after(&head_impl.head, std::move(value));
+        insert_after_impl(&head_impl.head, std::move(value));
     }
 
 private:
