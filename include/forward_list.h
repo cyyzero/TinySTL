@@ -688,6 +688,28 @@ public:
         return const_iterator(nullptr);
     }
 
+    bool empty() const noexcept
+    {
+        return head_impl.head.next == nullptr;
+    }
+
+    size_type max_size() const noexcept
+    {
+        return Node_alloc_traits::max_size(get_node_allocator());
+    }
+
+
+    // insert an element to the beginning
+    void push_front(const value_type& value)
+    {
+        insert_after(&head_impl.head, value);
+    }
+
+    void push_front(value_type&& value)
+    {
+        insert_after(&head_impl.head, std::move(value));
+    }
+
 private:
     void default_initialize(size_type count)
     {

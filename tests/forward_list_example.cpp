@@ -118,4 +118,20 @@ int main()
         if (empty.begin() == empty.end())
             std::cout << "forward_list 'empty' is indeed empty.\n";
     }
+
+    std::cout << "\nTest for empty:\n";
+    {
+        cyy::Forward_list<int> numbers;
+        std::cout << "Initially, numbers.empty(): " << numbers.empty() << '\n';
+    
+        numbers.push_front(42);
+        numbers.push_front(13317); 
+        std::cout << "After adding elements, numbers.empty(): " << numbers.empty() << '\n';
+    }
+
+    std::cout << "\nTest for max_size:\n";
+    {
+        cyy::Forward_list<char> s;
+        std::cout << "Maximum size of a 'forward_list' is " << s.max_size() << "\n";
+    }
 }
