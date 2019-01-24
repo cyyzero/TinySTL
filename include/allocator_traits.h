@@ -198,13 +198,13 @@ private:
     };
 
     template<typename Alloc2, typename = std::enable_if_t<max_size_helper<Alloc2>::type::value>>
-    static size_type max_size_impl(const Alloc& a, int)
+    static size_type max_size_impl(const Alloc2& a, int)
     {
         return a.max_size();
     }
 
     template<typename Alloc2, typename = std::enable_if_t<!max_size_helper<Alloc2>::type::value>>
-    static size_type max_size_impl(const Alloc& a, ...)
+    static size_type max_size_impl(const Alloc2& a, ...)
     {
         return std::numeric_limits<size_type>::max();
     }
@@ -280,7 +280,7 @@ public:
     // then returns std::numeric_limits<size_type>::max() 
     static size_type max_size(const Alloc& a)
     {
-        return max_size_imp(a, 0);
+        return max_size_impl(a, 0);
     }
 
     // If possible, obtains the copy-constructed version of the allocator a, 
