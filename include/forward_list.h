@@ -803,6 +803,29 @@ public:
             std::swap(head_impl.head.next, other.head_impl.head.next);
     }
 
+    // merge two sorted lists
+    void merge(Forward_list& other)
+    {
+        merge_by_default_comp(other);
+    }
+
+    void merge(Forward_list&& other)
+    {
+        merge_by_default_comp(other);
+    }
+
+    template<typename Compare>
+    void merge(Forward_list& other, Compare comp)
+    {
+        merge_by_other_comp(other, comp);
+    }
+
+    template<typename Compare>
+    void merge(Forward_list&& other, Compare comp)
+    {
+        merge_by_other_comp(other, comp);
+    }
+
 private:
     void default_initialize(size_type count)
     {
@@ -862,6 +885,55 @@ private:
         else
         {
             erase_after_impl(it, nullptr);
+        }
+    }
+
+    void merge_by_default_comp(Forward_list& other)
+    {
+        if (&other != this)
+        {
+            auto it1 = &head_impl.head, it2 = &other.head_impl.head;
+            while (it1->next && it2->next)
+            {
+                if (*static_cast<Node*>(it2->next)->valptr() < *static_cast<Node*>(it1->next)->valptr())
+                {
+                    auto tmp = it2->next->next;
+                    it2->next->next = it1->next;
+                    it1->next = it2->next;
+                    it2->next = tmp;
+                }
+                it1 = it1->next;
+            }
+            if (it2->next)
+            {
+                it1->next = it2->next;
+                it2->next = nullptr;
+            }
+        }
+    }
+
+    template<typename Compare>
+    void merge_by_other_comp(Forward_list& other, Compare comp)
+    {
+        if (&other != this)
+        {
+            auto it1 = &head_impl.head, it2 = &other.head_impl.head;
+            while (it1->next && it2->next)
+            {
+                if (comp(*static_cast<Node*>(it2->next)->valptr(), *static_cast<Node*>(it1->next)->valptr()))
+                {
+                    auto tmp = it2->next->next;
+                    it2->next->next = it1->next;
+                    it1->next = it2->next;
+                    it2->next = tmp;
+                }
+                it1 = it1->next;
+            }
+            if (it2->next)
+            {
+                it1->next = it2->next;
+                it2->next = nullptr;
+            }
         }
     }
 }; // class Forward_list

@@ -199,4 +199,19 @@ int main()
         for(auto& el: c) std::cout << el << ' ';
         std::cout << '\n';
     }
+
+    std::cout << "\nTest for merge:\n";
+    {
+        // Forward_list<int> list1 = { 5,9,0,1,3 };
+        // Forward_list<int> list2 = { 8,7,2,6,4 };
+        // TODO: implementate sort
+        // list1.sort();
+        // list2.sort();
+        Forward_list<int> list1 = { 0,1,3,5,9 };
+        Forward_list<int> list2 = { 2,4,6,7,8 };
+        std::cout << "list1:  " << list1 << "\n";
+        std::cout << "list2:  " << list2 << "\n";
+        list1.merge(list2);
+        std::cout << "merged: " << list1 << "\n";
+    }
 }
