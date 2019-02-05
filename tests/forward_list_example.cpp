@@ -214,4 +214,22 @@ int main()
         list1.merge(list2);
         std::cout << "merged: " << list1 << "\n";
     }
+
+    std::cout << "\nTest for remove/remove_if:\n";
+    {
+        Forward_list<int> l = { 1,100,2,3,10,1,11,-1,12,1};
+        // Forward_list<int> l = { 1};
+
+        l.remove(1); // remove both elements equal to 1
+        // for (int n : l) {
+        //     std::cout << n << ' ';
+        // }
+        // std::cout << '\n';
+        l.remove_if([](int n){ return n > 10; }); // remove all elements greater than 10
+
+        for (int n : l) {
+            std::cout << n << ' ';
+        }
+        std::cout << '\n';
+    }
 }

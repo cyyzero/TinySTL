@@ -371,7 +371,7 @@ protected:
         cyy::Allocator_traits<Allocator>::destroy(alloc, curr->valptr());
         Node_alloc_traits::destroy(get_node_allocator(), curr);
         put_node(curr);
-        return curr->next;
+        return pos->next;
     }
 
     Fwd_list_node_base* erase_after_impl(Fwd_list_node_base* pos, Fwd_list_node_base* last)
@@ -824,6 +824,62 @@ public:
     void merge(Forward_list&& other, Compare comp)
     {
         merge_by_other_comp(other, comp);
+    }
+
+    // move elements from another forward_list
+    // void splice_after(const_iterator pos, Forward_list& other)
+    // {
+
+    // }
+
+    // void splice_after(const_iterator pos, Forward_list&& other)
+    // {
+    //     splice_after(pos, other);
+    // }
+
+    // void splice_after(const_iterator pos, Forward_list& other, const_iterator it)
+    // {
+
+    // }
+
+    // void splice_after(const_iterator pos, Forward_list&& other, const_iterator it)
+    // {
+    //     splice_after(pos, other, it);
+    // }
+
+    // void splice_after(const_iterator pos, Forward_list& other,
+    //                   const_iterator first, const_iterator last)
+    // {
+
+    // }
+
+    // void splice_after(const_iterator pos, Forward_list&& other,
+    //                   const_iterator first, const_iterator last)
+    // {
+    //     splice_after(pos, other, first, last);
+    // }
+
+    // remove elements satisfying specific criteria
+    void remove(const value_type& value)
+    {
+        remove_if([&] (const value_type& v) {
+            return value == v;
+        });
+    }
+
+    template<typename UnaryPredicate >
+    void remove_if(UnaryPredicate p)
+    {
+        Node_base* prev = &head_impl.head;
+        for ( ;prev->next; prev = prev->next)
+        {
+            if (p(*static_cast<Node*>(prev->next)->valptr()))
+            {
+                if (erase_after_impl(prev) == nullptr)
+                    break;
+            }
+            
+        }
     }
 
 private:
