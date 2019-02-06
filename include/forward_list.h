@@ -827,37 +827,75 @@ public:
     }
 
     // move elements from another forward_list
-    // void splice_after(const_iterator pos, Forward_list& other)
-    // {
+    void splice_after(const_iterator pos, Forward_list& other)
+    {
+        if (this != &other)
+        {
+            Node_base* prev = const_cast<Node_base*>(pos.node);
+            Node_base* next = prev->next;
+            Node_base* head = other.head_impl.head.next;
+            Node_base* tail;
+            if (head)
+            {
+                tail = &other.head_impl.head;
+                while (tail->next)
+                {
+                    tail = tail->next;
+                }
+                prev->next = head;
+                tail->next = next;
+                other.head_impl.head.next = nullptr;
+            }
+        }
+    }
 
-    // }
+    void splice_after(const_iterator pos, Forward_list&& other)
+    {
+        splice_after(pos, other);
+    }
 
-    // void splice_after(const_iterator pos, Forward_list&& other)
-    // {
-    //     splice_after(pos, other);
-    // }
+    /// node after it must not be null
+    void splice_after(const_iterator pos, Forward_list& other, const_iterator it)
+    {
+        const_iterator tmp = it;
+        ++tmp;
+        if (it == pos || it == tmp)
+            return;
+        Node_base* prev = const_cast<Node_base*>(pos.node);
+        Node_base* p = const_cast<Node_base*>(it.node);
+        Node_base* n = p->next;
+        p->next = n->next;
+        n->next = prev->next;
+        prev->next = n;
+    }
 
-    // void splice_after(const_iterator pos, Forward_list& other, const_iterator it)
-    // {
+    void splice_after(const_iterator pos, Forward_list&& other, const_iterator it)
+    {
+        splice_after(pos, other, it);
+    }
 
-    // }
+    void splice_after(const_iterator pos, Forward_list& other,
+                      const_iterator first, const_iterator last)
+    {
+        Node_base* prev = const_cast<Node_base*>(pos.node);
+        Node_base* next = prev->next;
+        Node_base* head = const_cast<Node_base*>(first.node);
+        Node_base* tail = head;
+        while (tail->next != last.node)
+        {
+            tail = tail->next;
+        }
 
-    // void splice_after(const_iterator pos, Forward_list&& other, const_iterator it)
-    // {
-    //     splice_after(pos, other, it);
-    // }
+        prev->next = head->next;
+        head->next = const_cast<Node_base*>(last.node);
+        tail->next = next;
+    }
 
-    // void splice_after(const_iterator pos, Forward_list& other,
-    //                   const_iterator first, const_iterator last)
-    // {
-
-    // }
-
-    // void splice_after(const_iterator pos, Forward_list&& other,
-    //                   const_iterator first, const_iterator last)
-    // {
-    //     splice_after(pos, other, first, last);
-    // }
+    void splice_after(const_iterator pos, Forward_list&& other,
+                      const_iterator first, const_iterator last)
+    {
+        splice_after(pos, other, first, last);
+    }
 
     // remove elements satisfying specific criteria
     void remove(const value_type& value)
@@ -867,7 +905,7 @@ public:
         });
     }
 
-    template<typename UnaryPredicate >
+    template<typename UnaryPredicate>
     void remove_if(UnaryPredicate p)
     {
         Node_base* prev = &head_impl.head;

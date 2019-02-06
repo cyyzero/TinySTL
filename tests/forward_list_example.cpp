@@ -232,4 +232,56 @@ int main()
         }
         std::cout << '\n';
     }
+
+    std::cout << "\nTest for splice_after:\n";
+    {
+        {
+
+        // Forward_list<int> l1;
+        Forward_list<int> l1 = {1, 2, 3, 4, 5};
+        Forward_list<int> l2 = {10, 11, 12};
+        l2.splice_after(l2.before_begin(), l1);
+        // 不等价于 l2.splice_after(l2.cbegin(), l1);
+    
+        for (int n : l1)
+            std::cout << n << ' ';
+        std::cout << '\n';
+    
+        for (int n : l2)
+            std::cout << n << ' ';
+        std::cout << '\n';
+        }
+
+        {
+
+        // Forward_list<int> l1;
+        Forward_list<int> l1 = {1, 2, 3, 4, 5};
+        Forward_list<int> l2 = {10, 11, 12};
+        l2.splice_after(l2.before_begin(), l1, l1.begin());
+        // 不等价于 l2.splice_after(l2.cbegin(), l1);
+    
+        for (int n : l1)
+            std::cout << n << ' ';
+        std::cout << '\n';
+    
+        for (int n : l2)
+            std::cout << n << ' ';
+        std::cout << '\n';
+        }
+        {
+        Forward_list<int> l1 = {1, 2, 3, 4, 5};
+        Forward_list<int> l2 = {10, 11, 12};
+    
+        l2.splice_after(l2.cbegin(), l1, l1.cbegin(), l1.cend());
+        // 不等价于 l2.splice_after(l2.cbegin(), l1);
+    
+        for (int n : l1)
+            std::cout << n << ' ';
+        std::cout << '\n';
+    
+        for (int n : l2)
+            std::cout << n << ' ';
+        std::cout << '\n';
+        }
+    }
 }
