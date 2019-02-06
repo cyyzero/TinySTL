@@ -217,7 +217,7 @@ int main()
 
     std::cout << "\nTest for remove/remove_if:\n";
     {
-        Forward_list<int> l = { 1,100,2,3,10,1,11,-1,12,1};
+        Forward_list<int> l = { 1,1,100,2,3,10,1,11,-1,12,1};
         // Forward_list<int> l = { 1};
 
         l.remove(1); // remove both elements equal to 1

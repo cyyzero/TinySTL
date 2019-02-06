@@ -871,14 +871,12 @@ public:
     void remove_if(UnaryPredicate p)
     {
         Node_base* prev = &head_impl.head;
-        for ( ;prev->next; prev = prev->next)
+        while (prev->next)
         {
             if (p(*static_cast<Node*>(prev->next)->valptr()))
-            {
-                if (erase_after_impl(prev) == nullptr)
-                    break;
-            }
-            
+                erase_after_impl(prev);
+            else
+                prev = prev->next;
         }
     }
 
