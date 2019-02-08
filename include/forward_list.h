@@ -918,6 +918,21 @@ public:
         }
     }
 
+    // reverse the order of the elements
+    void reverse() noexcept
+    {
+        Node_base* curr = head_impl.head.next;
+        Node_base* head = nullptr;
+        while (curr)
+        {
+            auto tmp = curr->next;
+            curr->next = head;
+            head = curr;
+            curr = tmp;
+        }
+        head_impl.head.next = head;
+    }
+
 private:
     void default_initialize(size_type count)
     {

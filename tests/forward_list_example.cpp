@@ -284,4 +284,18 @@ int main()
         std::cout << '\n';
         }
     }
+
+    std::cout << "\nTest for reverse:\n";
+    {
+        Forward_list<int> list = { 8,7,5,9,0,1,3,2,6,4 };
+        // Forward_list<int> list;
+        // Forward_list<int> list = { 8};
+
+        std::cout << "before:     " << list << "\n";
+        // TODO: sort
+        // list.sort();
+        // std::cout << "ascending:  " << list << "\n";
+        list.reverse();
+        std::cout << "descending: " << list << "\n";
+    }
 }
