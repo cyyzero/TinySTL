@@ -933,6 +933,18 @@ public:
         head_impl.head.next = head;
     }
 
+    // sort the elements 
+    void sort()
+    {
+        // TODO: finish
+    }
+
+    template <class Compare>
+    void sort(Compare comp)
+    {
+        // TODO: finish
+    }
+
 private:
     void default_initialize(size_type count)
     {
