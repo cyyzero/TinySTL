@@ -112,15 +112,16 @@ public:
 
         bit_len = std::min(n, str.size() - pos);
         bit_len = std::min(bit_len, N);
-        byte_len = bit_len/8;
+        byte_len = (bit_len-1)/8;
 
         std::size_t i;
         for (i = 1; i <= byte_len; ++i)
         {
             auto start = pos + bit_len - i * 8;
             uint8_t byte = 0;
-            for (std::size_t j = 0; j < 8; ++j, byte <<= 1)
+            for (std::size_t j = 0; j < 8; ++j)
             {
+                byte <<= 1;
                 CharT bit = str[start + j];
                 if (Traits::eq(bit, one))
                 {
@@ -135,8 +136,9 @@ public:
         }
 
         uint8_t byte = 0;
-        for (std::size_t j = 0; j < bit_len - byte_len * 8; ++j, byte <<= 1)
+        for (std::size_t j = 0; j < bit_len - byte_len * 8; ++j)
         {
+            byte <<= 1;
             CharT bit = str[pos + j];
             if (Traits::eq(bit, one))
             {
@@ -147,7 +149,7 @@ public:
                 throw std::invalid_argument("str can't have character other than zero or one");
             }
         }
-        bits[i++] = byte;
+        bits[i-1] = byte;
 
         for (; i < byte_len; ++i)
         {
@@ -224,22 +226,22 @@ template<typename CharT, typename Traits, std::size_t N>
 std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os,
                                               const Bitset<N>& x)
 {
-    // for (std::size_t i = N; i > 0; ++i)
-    // {
-    //     if (x[i-1])
-    //     {
-    //         os << '1';
-    //     }
-    //     else
-    //     {
-    //         os << '0';
-    //     }
-    // }
-
-    for (size_t i = 0; i < x.byte_len ; ++i)
+    for (std::size_t i = N; i > 0; --i)
     {
-        std::cout << (int)x.bits[i] << " ";
+        if (x[i-1])
+        {
+            os << '1';
+        }
+        else
+        {
+            os << '0';
+        }
     }
+
+    // for (size_t i = 0; i < x.byte_len ; ++i)
+    // {
+    //     std::cout << (int)x.bits[i] << " ";
+    // }
     return os;
 }
 
