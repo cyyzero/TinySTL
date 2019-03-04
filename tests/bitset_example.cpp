@@ -6,6 +6,8 @@
 int main() 
 {
     using namespace cyy;
+    std::cout << "Test for ctors:\n";
+    {
     // 空构造函数
     Bitset<8> b1; // [0,0,0,0,0,0,0,0]
  
@@ -33,4 +35,15 @@ int main()
     std::cout << b1 << '\n' << b2 << '\n' << bl << '\n' << bs << '\n'
               << b3 << '\n' << b4 << '\n' << b5 << '\n' << b6 << '\n'
               << b7 << '\n' << b8 << '\n';
+    }
+
+    std::cout << "\nTest for operator[]\n";
+    {
+    Bitset<8> b1(42);
+    for (std::size_t i = 0; i < b1.size(); ++i) {
+        std::cout << "b1[" << i << "]: " << b1[i] << '\n';
+    }
+    b1[0] = true; // modifies the first bit through bitset::reference
+    std::cout << "After setting bit 0, the bitset holds " << b1 << '\n';
+    }
 }

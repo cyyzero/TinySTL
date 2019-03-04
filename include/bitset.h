@@ -19,6 +19,7 @@ public:
     // a proxy object to allow users to interact with individual bits of a Bitset,
     class reference
     {
+    friend class Bitset<N>;
     public:
         reference& operator=(bool x)
         {
