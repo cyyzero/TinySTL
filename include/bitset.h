@@ -78,23 +78,28 @@ public:
         uint8_t mask;
     };
 
+    // constructors
     constexpr Bitset()
     {
-        std::memset(bits, 0, byte_len);
+        std::memset(bits, 0, BYTE_LEN);
     }
 
     constexpr Bitset(unsigned long long val)
     {
-        if (sizeof(val) * 8 > N)
+        if constexpr (sizeof(val) * 8 > N)
         {
-            unsigned long long mask = ~((~(unsigned long long)0x0) << N);
+            constexpr unsigned long long mask = ~((~(unsigned long long)0x0) << N);
             val &= mask;
         }
         uint8_t* ptr = reinterpret_cast<uint8_t*>(&val);
-        std::memset(bits, 0, byte_len);
-        for (std::size_t i = 0; i < std::min(sizeof(val), byte_len); ++i)
+        std::size_t len = std::min(sizeof(val), BYTE_LEN);
+        for (std::size_t i = 0; i < len; ++i)
         {
             bits[i] = ptr[i];
+        }
+        for (std::size_t i = len; i < BYTE_LEN; ++i)
+        {
+            bits[i] = 0;
         }
     }
 
@@ -113,7 +118,7 @@ public:
 
         bit_len = std::min(n, str.size() - pos);
         bit_len = std::min(bit_len, N);
-        byte_len = (bit_len-1)/8;
+        byte_len = bit_len / 8;
 
         std::size_t i;
         for (i = 1; i <= byte_len; ++i)
@@ -136,23 +141,26 @@ public:
             bits[i-1] = byte;
         }
 
-        uint8_t byte = 0;
-        for (std::size_t j = 0; j < bit_len - byte_len * 8; ++j)
+        if (bit_len % 8)
         {
-            byte <<= 1;
-            CharT bit = str[pos + j];
-            if (Traits::eq(bit, one))
+            uint8_t byte = 0;
+            for (std::size_t j = 0; j < bit_len - byte_len * 8; ++j)
             {
-                byte |= 1;
+                byte <<= 1;
+                CharT bit = str[pos + j];
+                if (Traits::eq(bit, one))
+                {
+                    byte |= 1;
+                }
+                else if (!Traits::eq(bit, zero))
+                {
+                    throw std::invalid_argument("str can't have character other than zero or one");
+                }
             }
-            else if (!Traits::eq(bit, zero))
-            {
-                throw std::invalid_argument("str can't have character other than zero or one");
-            }
+            bits[i-1] = byte;
         }
-        bits[i-1] = byte;
 
-        for (; i < byte_len; ++i)
+        for (; i < BYTE_LEN; ++i)
         {
             bits[i] = 0;
         }
@@ -171,11 +179,13 @@ public:
     {
     }
 
+    // destructor
     ~Bitset() = default;
 
+    // compare the contents
     bool operator==(const Bitset<N>& rhs) const
     {
-        for (std::size_t i = 0; i < byte_len; ++i)
+        for (std::size_t i = 0; i < BYTE_LEN; ++i)
         {
             if (bits[i] != rhs.bits[i])
                 return false;
@@ -188,6 +198,7 @@ public:
         return !(*this == rhs);
     }
 
+    // access specific bit
     bool test(std::size_t pos) const
     {
         if (pos > N)
@@ -197,6 +208,7 @@ public:
         return this->operator[](pos);
     }
 
+    // access specific bit
     constexpr bool operator[](std::size_t pos) const
     {
         // unlike test(), it does'nt check bound
@@ -213,14 +225,166 @@ public:
         return reference(byte, mask);
     }
 
+    // check if all, any or none of the bits are set to true
+    bool all() const
+    {
+        return check_bytes(0xff);
+    }
+
+    bool none() const
+    {
+        return check_bytes(0);
+    }
+
+    bool any() const
+    {
+        return !check_bytes(0);
+    }
+
+    // count the number of bit that is true
+    std::size_t count() const
+    {
+        std::size_t count = 0;
+
+        for (std::size_t i = 0; i < BYTE_LEN; ++i)
+        {
+            count += count_byte(bits[i]);
+        }
+
+        return count;
+    }
+
+
+    // set all bits to true
+    Bitset& set()
+    {
+        for (size_t i = 0; i < BYTE_LEN-1; ++i)
+            bits[i] = 0xff;
+
+        bits[BYTE_LEN-1] = 0xff << (N % 8);
+        return *this;
+    }
+
+    // get size
     constexpr std::size_t size() const noexcept
     {
         return N;
     }
 
+    // Bitset& operator&=(const Bitset& other)
+    // {
+    //     for (std::size_t i = 0; i < BYTE_LEN; ++i)
+    //     {
+    //         bits[i] &= other.bits[i];
+    //     }
+
+    //     // // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
+
+    //     return *this;
+    // }
+
+    // Bitset& operator|=(const Bitset& other)
+    // {
+    //     for (std::size_t i = 0; i < BYTE_LEN; ++i)
+    //     {
+    //         bits[i] |= other.bits[i];
+    //     }
+
+    //     // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
+
+    //     return *this;
+    // }
+
+    // Bitset& operator^=(const Bitset& other)
+    // {
+    //     for (std::size_t i = 0; i < BYTE_LEN; ++i)
+    //     {
+    //         bits[i] ^= other.bits[i];
+    //     }
+
+    //     // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
+
+    //     return *this;
+    // }
+
+    // Bitset operator~()
+    // {
+    //     return Bitset(*this).flip();
+    // }
+
+    // set the bit at position pos to the value value.
+    Bitset& set(std::size_t pos, bool value = true)
+    {
+        uint8_t mask = 0x1 << (pos % 8);
+        if (value)
+            bits[pos/8] |= mask;
+        else
+            bits[pos/8] &= ~mask;
+        return *this;
+    }
+
+    // flip bits
+    Bitset& flip()
+    {
+        for (std::size_t i = 0; i < BYTE_LEN; ++i)
+        {
+            bits[i] = ~bits[i];
+        }
+
+        // ~0 = 1, so have to set the left (N%8) bits to zero
+        if constexpr (N % 8 != 0)
+        {
+            constexpr uint8_t mask = (uint8_t)~(0xff << (N % 8));
+            bits[BYTE_LEN-1] &= mask;
+        }
+
+        return *this;
+    }
+
+    Bitset& flip(std::size_t pos)
+    {
+        if (pos >= N)
+            throw std::out_of_range("pos can't be larger than N.");
+
+        uint8_t mask = (0x1 << (pos % 8));
+        bits[pos / 8] ^= mask;
+
+        return *this;
+    }
+
 private:
-    static constexpr std::size_t byte_len = (N-1) / 8 + 1;
-    uint8_t bits[byte_len];
+
+    bool check_bytes(uint8_t num) const
+    {
+        constexpr std::size_t byte_len = N / 8;
+        constexpr uint8_t left = N % 8;
+        for (std::size_t i = 0; i < byte_len; ++i)
+        {
+            if (num != bits[i])
+                return false;
+        }
+        if constexpr (left != 0)
+        {
+            constexpr uint8_t mask = (uint8_t)~(0xff << left);
+            if ((bits[byte_len] & mask) != (num & mask))
+                return false;
+        }
+        return true;
+    }
+
+    std::size_t count_byte(uint8_t num) const
+    {
+        std::size_t cnt = 0;
+        while (num)
+        {
+            num &= (num-1);
+            ++cnt;
+        }
+        return cnt;
+    }
+
+    static constexpr std::size_t BYTE_LEN = (N-1) / 8 + 1;
+    uint8_t bits[BYTE_LEN];
 };
 
 template<typename CharT, typename Traits, std::size_t N>
@@ -238,11 +402,6 @@ std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&
             os << '0';
         }
     }
-
-    // for (size_t i = 0; i < x.byte_len ; ++i)
-    // {
-    //     std::cout << (int)x.bits[i] << " ";
-    // }
     return os;
 }
 
