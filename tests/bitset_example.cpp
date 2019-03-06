@@ -130,4 +130,17 @@ int main()
         std::cout << b.flip(2) << '\n';          // 0101
         std::cout << b.flip() << '\n';           // 1010
     }
+
+    // std::cout << "\nTest for operator&=,|=,^=,~:\n";
+    // {
+    //     Bitset<16> dest;
+    //     std::string pattern_str = "1001";
+    //     Bitset<16> pattern(pattern_str);
+    
+    //     for (size_t i = 0, ie = dest.size()/pattern_str.size(); i != ie; ++i) {
+    //         dest <<= pattern_str.size();
+    //         dest |= pattern;
+    //     }
+    //     std::cout << dest << '\n';
+    // }
 }

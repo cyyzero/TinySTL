@@ -271,45 +271,72 @@ public:
         return N;
     }
 
-    // Bitset& operator&=(const Bitset& other)
+    // perform binary AND, OR, XOR and NOT 
+    Bitset& operator&=(const Bitset& other)
+    {
+        for (std::size_t i = 0; i < BYTE_LEN; ++i)
+        {
+            bits[i] &= other.bits[i];
+        }
+        // // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
+        return *this;
+    }
+
+    Bitset& operator|=(const Bitset& other)
+    {
+        for (std::size_t i = 0; i < BYTE_LEN; ++i)
+        {
+            bits[i] |= other.bits[i];
+        }
+        // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
+        return *this;
+    }
+
+    Bitset& operator^=(const Bitset& other)
+    {
+        for (std::size_t i = 0; i < BYTE_LEN; ++i)
+        {
+            bits[i] ^= other.bits[i];
+        }
+        // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
+        return *this;
+    }
+
+    Bitset operator~()
+    {
+        return Bitset(*this).flip();
+    }
+
+    // perform binary shift left and shift right
+    Bitset operator<<(std::size_t pos) const
+    {
+        return (Bitset(*this) <<= pos);
+    }
+
+    // Bitset& operator<<=(std::size_t pos)
     // {
-    //     for (std::size_t i = 0; i < BYTE_LEN; ++i)
+    //     if (pos >= N)
     //     {
-    //         bits[i] &= other.bits[i];
+    //         set();
     //     }
 
-    //     // // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
-
-    //     return *this;
+    //     uint8_t left_bits = pos % 8;
+    //     std::size_t 
     // }
 
-    // Bitset& operator|=(const Bitset& other)
+    Bitset operator>>(std::size_t pos) const
+    {
+        return (Bitset(*this) >>= pos);
+    }
+
+    // Bitset& operator>>=(std::size_t pos)
     // {
-    //     for (std::size_t i = 0; i < BYTE_LEN; ++i)
+    //     if (pos >= N)
     //     {
-    //         bits[i] |= other.bits[i];
+    //         set();
     //     }
 
-    //     // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
 
-    //     return *this;
-    // }
-
-    // Bitset& operator^=(const Bitset& other)
-    // {
-    //     for (std::size_t i = 0; i < BYTE_LEN; ++i)
-    //     {
-    //         bits[i] ^= other.bits[i];
-    //     }
-
-    //     // 0 ^ 0 = 0, so don't have to set the left (N%8) bits.
-
-    //     return *this;
-    // }
-
-    // Bitset operator~()
-    // {
-    //     return Bitset(*this).flip();
     // }
 
     // set the bit at position pos to the value value.
