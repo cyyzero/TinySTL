@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <climits>
+#include <cassert>
  
 int main() 
 {
@@ -55,8 +56,11 @@ int main()
         Bitset<4> b2(b1);
         Bitset<4> b3(4); // [0,1,0,0]
     
+        assert((b1 == b2) == 1);
         std::cout << "b1 == b2: " << (b1 == b2) << '\n';  // 1
+        assert((b1 == b3) == 0);
         std::cout << "b1 == b3: " << (b1 == b3) << '\n';  // 0
+        assert((b1 != b3) == 1);
         std::cout << "b1 != b3: " << (b1 != b3) << '\n';  // 1
     }
 
@@ -83,10 +87,21 @@ int main()
         Bitset<4> b3("1111");
     
         std::cout << "bitset\t" << "all\t" << "any\t" << "none\n";
+        assert(b1.all() == 0);
+        assert(b1.any() == 0);
+        assert(b1.none() == 1);
         std::cout << b1 << '\t' << b1.all() << '\t' << b1.any() << '\t' << b1.none() << '\n';
         // 0 0 1
+
+        assert(b2.all() == 0);
+        assert(b2.any() == 1);
+        assert(b2.none() == 0);
         std::cout << b2 << '\t' << b2.all() << '\t' << b2.any() << '\t' << b2.none() << '\n';
         // 0 1 0
+
+        assert(b3.all() == 1);
+        assert(b3.any() == 1);
+        assert(b3.none() == 0);
         std::cout << b3 << '\t' << b3.all() << '\t' << b3.any() << '\t' << b3.none() << '\n';
         // 1 1 0
     }
@@ -111,36 +126,75 @@ int main()
         // 00010111
     }
 
+    std::cout << "\nTest for flip:\n";
+    {
+        Bitset<4> b;
+
+        std::cout << b << "\n";                  // 0000
+        assert(b == Bitset<4>("0000"));
+        std::cout << b.flip(0) << '\n';          // 0001
+        assert(b == Bitset<4>("0001"));
+        std::cout << b.flip(2) << '\n';          // 0101
+        assert(b == Bitset<4>("0101"));
+        std::cout << b.flip() << '\n';           // 1010
+        assert(b == Bitset<4>("1010"));
+    }
+
+    std::cout << "\nTest for operator&=,|=,^=,~:\n";
+    {
+        Bitset<16> dest;
+        std::string pattern_str = "1001";
+        Bitset<16> pattern(pattern_str);
+    
+        for (size_t i = 0, ie = dest.size()/pattern_str.size(); i != ie; ++i) {
+            dest <<= pattern_str.size();
+            dest |= pattern;
+        }
+        assert(dest == Bitset<16>("1001100110011001"));
+        std::cout << dest << '\n';
+    }
+
+    std::cout << "\nTest for operator<<,<<=,>>,>>=:\n";
+    {
+        Bitset<8> b("01110010");
+        std::cout << "initial value: " << b << '\n';
+    
+        while (b.any()) {
+            while (!b.test(0)) {
+                b >>= 1;
+            }
+            std::cout << b << '\n';
+            b >>= 1;
+        }
+        // 00111001
+        // 00000111
+        // 00000011
+        // 00000001
+    }
+
     std::cout << "\nTest for set:\n";
     {
         Bitset<8> b;
         for (size_t i = 1; i < b.size(); i += 2) {
             b.set(i);
         }
+        assert(b == decltype(b)("10101010"));
         std::cout << b << '\n';
         // 10101010
     }
 
-    std::cout << "\nTest for flip:\n";
+    std::cout << "\nTest for reset:\n";
     {
-        Bitset<4> b;
+        Bitset<8> b(42);
+        assert(b == Bitset<8>("00101010"));
+        std::cout << "Bitset is         " << b << '\n';
 
-        std::cout << b << "\n";                  // 0000
-        std::cout << b.flip(0) << '\n';          // 0001
-        std::cout << b.flip(2) << '\n';          // 0101
-        std::cout << b.flip() << '\n';           // 1010
+        b.reset(1);
+        assert(b == Bitset<8>("00101000"));
+        std::cout << "After b.reset(1): " << b << '\n';
+
+        b.reset();
+        assert(b == Bitset<8>());
+        std::cout << "After b.reset():  " << b << '\n';
     }
-
-    // std::cout << "\nTest for operator&=,|=,^=,~:\n";
-    // {
-    //     Bitset<16> dest;
-    //     std::string pattern_str = "1001";
-    //     Bitset<16> pattern(pattern_str);
-    
-    //     for (size_t i = 0, ie = dest.size()/pattern_str.size(); i != ie; ++i) {
-    //         dest <<= pattern_str.size();
-    //         dest |= pattern;
-    //     }
-    //     std::cout << dest << '\n';
-    // }
 }

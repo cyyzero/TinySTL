@@ -254,17 +254,6 @@ public:
         return count;
     }
 
-
-    // set all bits to true
-    Bitset& set()
-    {
-        for (size_t i = 0; i < BYTE_LEN-1; ++i)
-            bits[i] = 0xff;
-
-        bits[BYTE_LEN-1] = 0xff << (N % 8);
-        return *this;
-    }
-
     // get size
     constexpr std::size_t size() const noexcept
     {
@@ -313,33 +302,73 @@ public:
         return (Bitset(*this) <<= pos);
     }
 
-    // Bitset& operator<<=(std::size_t pos)
-    // {
-    //     if (pos >= N)
-    //     {
-    //         set();
-    //     }
+    Bitset& operator<<=(std::size_t pos)
+    {
+        if (pos >= N)
+        {
+            set();
+        }
 
-    //     uint8_t left_bits = pos % 8;
-    //     std::size_t 
-    // }
+        uint8_t left_bits = pos % 8;
+        std::size_t gap = pos / 8;
+
+        for (int i = (int)BYTE_LEN - 1; i > (int)gap; --i)
+        {
+            bits[i] = (bits[i-gap] << left_bits) + (bits[i-gap-1] >> (8-left_bits));
+        }
+        bits[gap] = bits[0] << left_bits;
+        for (int i = (int)gap-1; i >= 0; ++i)
+        {
+            bits[i] = 0;
+        }
+
+        if constexpr (N % 8 != 0)
+        {
+            set_left_bits();
+        }
+
+        return *this;
+    }
 
     Bitset operator>>(std::size_t pos) const
     {
         return (Bitset(*this) >>= pos);
     }
 
-    // Bitset& operator>>=(std::size_t pos)
-    // {
-    //     if (pos >= N)
-    //     {
-    //         set();
-    //     }
+    Bitset& operator>>=(std::size_t pos)
+    {
+        if (pos >= N)
+        {
+            set();
+        }
 
+        uint8_t left_bits = pos % 8;
+        std::size_t gap = pos / 8;
 
-    // }
+        for (std::size_t i = 0; i < BYTE_LEN - gap - 1; ++i)
+        {
+            bits[i] = (bits[i+gap] >> left_bits) + (bits[i+gap+1] << (8-left_bits));
+        }
+        bits[BYTE_LEN - gap - 1] = (bits[BYTE_LEN - 1] >> left_bits);
+        for (std::size_t i = BYTE_LEN - gap; i < BYTE_LEN; ++i)
+        {
+            bits[i] = 0;
+        }
 
-    // set the bit at position pos to the value value.
+        return *this;
+    }
+
+    // set all bits to true
+    Bitset& set()
+    {
+        for (size_t i = 0; i < BYTE_LEN-1; ++i)
+            bits[i] = 0xff;
+
+        bits[BYTE_LEN-1] = 0xff << (N % 8);
+        return *this;
+    }
+
+    // set the bit at position pos to the value.
     Bitset& set(std::size_t pos, bool value = true)
     {
         uint8_t mask = 0x1 << (pos % 8);
@@ -347,6 +376,29 @@ public:
             bits[pos/8] |= mask;
         else
             bits[pos/8] &= ~mask;
+        return *this;
+    }
+
+    // Sets all bits to false
+    Bitset& reset()
+    {
+        for (std::size_t i = 0; i < BYTE_LEN; ++i)
+        {
+            bits[i] = 0;
+        }
+        return *this;
+    }
+
+    Bitset& reset(std::size_t pos)
+    {
+        if (pos > N)
+        {
+            throw std::out_of_range("pos can't be larger than N");
+        }
+
+        uint8_t mask = 0x1 << (pos % 8);
+        bits[pos / 8] &= ~mask;
+
         return *this;
     }
 
@@ -361,8 +413,7 @@ public:
         // ~0 = 1, so have to set the left (N%8) bits to zero
         if constexpr (N % 8 != 0)
         {
-            constexpr uint8_t mask = (uint8_t)~(0xff << (N % 8));
-            bits[BYTE_LEN-1] &= mask;
+            set_left_bits();
         }
 
         return *this;
@@ -371,13 +422,16 @@ public:
     Bitset& flip(std::size_t pos)
     {
         if (pos >= N)
-            throw std::out_of_range("pos can't be larger than N.");
+        {
+            throw std::out_of_range("pos can't be larger than N");
+        }
 
-        uint8_t mask = (0x1 << (pos % 8));
+        uint8_t mask = 0x1 << (pos % 8);
         bits[pos / 8] ^= mask;
 
         return *this;
     }
+
 
 private:
 
@@ -408,6 +462,12 @@ private:
             ++cnt;
         }
         return cnt;
+    }
+
+    void set_left_bits()
+    {
+        constexpr uint8_t mask = (uint8_t)~(0xff << (N % 8));
+        bits[BYTE_LEN-1] &= mask;
     }
 
     static constexpr std::size_t BYTE_LEN = (N-1) / 8 + 1;
