@@ -13,8 +13,9 @@ template<std::size_t N>
 class Bitset
 {
 template<typename CharT, typename Traits, std::size_t N_>
-friend std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os,
-                                                     const Bitset<N_>& x);
+friend std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const Bitset<N_>& x);
+
 public:
     // a proxy object to allow users to interact with individual bits of a Bitset,
     class reference
@@ -432,6 +433,41 @@ public:
         return *this;
     }
 
+    // convert the contents to a string
+    template<typename CharT, typename Traits = std::char_traits<CharT>, typename Allocator = std::allocator<CharT>>
+    std::basic_string<CharT, Traits, Allocator> to_string(CharT zero = CharT('0'), CharT one = CharT('1')) const
+    {
+        std::basic_string<CharT, Traits, Allocator> ans;
+        for (std::size_t i = N; i > 0; --i)
+        {
+            if (operator[](i-1))
+            {
+                ans.push_back(one);
+            }
+            else
+            {
+                ans.push_back(zero);
+            }
+        }
+        return ans;
+    }
+
+    auto to_string() const
+    {
+        return to_string<char, std::char_traits<char>, std::allocator<char>>();
+    }
+
+    // convert the contents to unsigned long
+    unsigned long to_ulong() const
+    {
+        return to_uint_t<unsigned long>("can't convert to unsigned long");
+    }
+
+    // convert the contents to unsigned long long
+    unsigned long long to_ullong() const
+    {
+        return to_uint_t<unsigned long long>("can't convert to unsigned long long");
+    }
 
 private:
 
@@ -470,10 +506,48 @@ private:
         bits[BYTE_LEN-1] &= mask;
     }
 
+    // convert to uint_t type unsigned integer
+    template<typename uint_t>
+    uint_t to_uint_t(const char* except) const
+    {
+        if (BYTE_LEN > sizeof(uint_t))
+            throw std::overflow_error(except);
+
+        uint_t ans = 0;
+
+        for (std::size_t i = BYTE_LEN; i > 0; --i)
+        {
+            ans <<= 8;
+            ans += bits[i-1];
+        }
+
+        return ans;
+    }
+
     static constexpr std::size_t BYTE_LEN = (N-1) / 8 + 1;
     uint8_t bits[BYTE_LEN];
 };
 
+// perform binary logic operations on bitsets
+template<std::size_t N>
+Bitset<N> operator&(const Bitset<N>& lhs, const Bitset<N>& rhs) noexcept
+{
+    return Bitset<N>(lhs) &= rhs;
+}
+
+template<std::size_t N>
+Bitset<N> operator|(const Bitset<N>& lhs, const Bitset<N>& rhs) noexcept
+{
+    return Bitset<N>(lhs) |= rhs;
+}
+
+template<std::size_t N>
+Bitset<N> operator^(const Bitset<N>& lhs, const Bitset<N>& rhs) noexcept
+{
+    return Bitset<N>(lhs) ^= rhs;
+}
+
+// perform stream input and output of bitsets 
 template<typename CharT, typename Traits, std::size_t N>
 std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os,
                                               const Bitset<N>& x)
@@ -490,6 +564,16 @@ std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&
         }
     }
     return os;
+}
+
+template<typename CharT, typename Traits, std::size_t N>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is,
+                                              Bitset<N>& x)
+{
+    char buf[N+1] = { };
+    is.read(buf, N);
+    x = Bitset<N>(buf);
+    return is;
 }
 
 } // namespace cyy

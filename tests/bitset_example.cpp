@@ -1,8 +1,10 @@
 #include "bitset.h"
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <climits>
 #include <cassert>
+#include <limits>
  
 int main() 
 {
@@ -196,5 +198,73 @@ int main()
         b.reset();
         assert(b == Bitset<8>());
         std::cout << "After b.reset():  " << b << '\n';
+    }
+
+    std::cout << "\nTest for to_string:\n";
+    {
+        Bitset<8> b(42);
+        assert (b.to_string() == "00101010");
+        std::cout << b.to_string() << '\n';
+        assert(b.to_string('*') == "**1*1*1*");
+        std::cout << b.to_string('*') << '\n';
+        assert(b.to_string('O', 'X') == "OOXOXOXO");
+        std::cout << b.to_string('O', 'X') << '\n';
+    }
+
+    std::cout << "\nTest for to_ulong:\n";
+    {
+        for (unsigned long i = 0; i < 10; ++i) {
+            Bitset<5> b(i);
+            Bitset<5> b_inverted = ~b;
+            std::cout << i << '\t';
+            std::cout << b << '\t';
+            std::cout << b_inverted << '\t';
+            std::cout << b_inverted.to_ulong() << '\n'; 
+        }
+    }
+
+    std::cout << "\nTest for to_ullong:\n";
+    {
+        Bitset<std::numeric_limits<unsigned long long>::digits> b(
+            0x123456789abcdef0LL
+        );
+
+        std::cout << b << "  " << std::hex << b.to_ullong() << '\n';
+        assert(b == decltype(b)("0001001000110100010101100111100010011010101111001101111011110000") &&
+               b.to_ullong() == 0x123456789abcdef0);
+        // 0001001000110100010101100111100010011010101111001101111011110000
+        // 0001001000110100010101100111100010011010101111001101111011110000
+        b.flip();
+        assert(b == decltype(b)("1110110111001011101010011000011101100101010000110010000100001111") &&
+               b.to_ullong() == 0xedcba9876543210f);
+        std::cout << b << "  " << b.to_ullong() << '\n';
+    }
+
+    std::cout << "\nTest for operator&,|,^:\n";
+    {
+        Bitset<4> b1("0110");
+        Bitset<4> b2("0011");
+        assert((b1 & b2) == Bitset<4>("0010"));
+        std::cout << "b1 & b2: " << (b1 & b2) << '\n';
+        assert((b1 | b2) == Bitset<4>("0111"));
+        std::cout << "b1 | b2: " << (b1 | b2) << '\n';
+        assert((b1 ^ b2) == Bitset<4>("0101"));
+        std::cout << "b1 ^ b2: " << (b1 ^ b2) << '\n';
+    }
+
+    std::cout << "\nTest for operator <<,>>:\n";
+    {
+        std::string bit_string = "001101";
+        std::istringstream bit_stream(bit_string);
+    
+        Bitset<3> b1;
+        bit_stream >> b1; // reads "001", stream still holds "101"
+        assert(b1.to_string() == "001");
+        std::cout << b1 << '\n';
+    
+        Bitset<8> b2;
+        bit_stream >> b2; // reads "101", populates the 8-bit set as "00000101"
+        std::cout << b2 << '\n';
+        assert(b2.to_string() == "00000101");
     }
 }
