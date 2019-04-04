@@ -578,10 +578,10 @@ using Tuple_element_t = typename Tuple_element<I, T>::type;
 // make_tuple
 template<typename... Types>
 constexpr
-Tuple<typename strip_reference_wrapper<Types>::type...>
+Tuple<typename decay_and_strip<Types>::type...>
 make_tuple(Types&&... args)
 {
-    return Tuple<typename strip_reference_wrapper<Types>::type...>(std::forward<Types>(args)...);
+    return Tuple<typename decay_and_strip<Types>::type...>(std::forward<Types>(args)...);
 }
 
 // forward_as_tuple
