@@ -557,7 +557,7 @@ struct make_unique_helper<T[Size]>
 {
     struct invalid_t { };
 };
-}; // namespace detail
+} // namespace detail
 
 // only for non-array types
 template<typename T, typename... Args>
