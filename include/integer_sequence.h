@@ -17,17 +17,17 @@ class Integer_sequence
     }
 };
 
-template<typename T, T Sp, typename Seq, T Ep>
+template<typename T, T... Ints>
 struct Make_integer_sequence_impl;
 
-template<typename T, T Sp, T... Ints , T Ep>
-struct Make_integer_sequence_impl<T, Sp, Integer_sequence<T, Ints...> , Ep>
-    : public Make_integer_sequence_impl<T, Sp+1, Integer_sequence<T, Ints..., Sp> , Ep>
+template<typename T, T Sp, T Ep, T... Ints>
+struct Make_integer_sequence_impl<T, Sp, Ep, Ints...>
+    : public Make_integer_sequence_impl<T, Sp, Ep-1, Ep-1, Ints...>
 {
 };
 
 template<typename T, T Sp, T... Ints>
-struct Make_integer_sequence_impl<T, Sp, Integer_sequence<T, Ints...>, Sp>
+struct Make_integer_sequence_impl<T, Sp, Sp , Ints...>
 {
     using type = Integer_sequence<T, Ints...>;
 };
@@ -36,7 +36,7 @@ template<std::size_t... Ints>
 using Index_sequence = Integer_sequence<std::size_t, Ints...>;
 
 template<typename T, T N>
-using Make_integer_sequence = typename Make_integer_sequence_impl<T, 0, Integer_sequence<T>, N>::type;
+using Make_integer_sequence = typename Make_integer_sequence_impl<T, 0, N>::type;
 
 template<std::size_t N>
 using Make_index_sequence = Make_integer_sequence<std::size_t, N>;
