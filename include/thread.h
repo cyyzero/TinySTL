@@ -11,7 +11,6 @@
 #include <pthread.h>
 #include <time.h>
 
-#include "unique_ptr.h"
 #include "integer_sequence.h"
 #include "tuple.h"
 
@@ -27,6 +26,7 @@ struct Thread_data_base
     virtual void run() = 0;
 };
 
+// store callable object and its parameters
 template<typename Function, typename... Args>
 struct Thread_data : public Thread_data_base
 {
@@ -52,10 +52,13 @@ struct Thread_data : public Thread_data_base
     Tuple<typename decay_and_strip<Args>::type...> param;
 };
 
+// entry function used in pthread_create(), param is a pointer to Thread_data,
+// Thread_data will run in the entry
 void* thread_entry(void* param);
 
 } // namespace detail
 
+// wrapper class of pthread
 class Thread
 {
 public:
@@ -116,7 +119,7 @@ public:
         native_handle_type tid_;
     };
 
-
+    // constructors
     Thread() noexcept
         : id_(), data_(nullptr)
     {
@@ -124,6 +127,7 @@ public:
 
     Thread(Thread&& other) noexcept;
 
+    // create a callobject object and a thread
     template<typename Function, typename... Args>
     explicit Thread(Function&& f, Args&&... args)
         : data_(new detail::Thread_data<Function, Args...>(std::forward<Function>(f), std::forward<Args>(args)...))
@@ -136,22 +140,31 @@ public:
 
     Thread(const Thread&) = delete;
 
+    // destructor
     ~Thread();
 
+    // moves the thread object
     Thread& operator=(Thread&& other) noexcept;
 
+    // check whether the thread is joinable
     bool joinable() const noexcept;
 
+    // return the id of the thread
     id get_id() const noexcept;
 
+    // returns the underlying implementation-defined thread handle, pthread_t
     native_handle_type native_handle();
 
+    // wait for a thread to finish its execution
     void join();
 
+    // permit the thread to execute independently from the thread handle
     void detach();
 
+    // swap two thread object
     void swap(Thread& other) noexcept;
 
+    // return the number of concurrent threads
     static unsigned int hardware_concurrency() noexcept;
 
 private:

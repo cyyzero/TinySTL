@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <sys/sysinfo.h>
 
+#include "unique_ptr.h"
+
 using namespace cyy;
 using namespace std;
 
