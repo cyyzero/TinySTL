@@ -1,12 +1,15 @@
 #ifndef __THREAD_H
 #define __THREAD_H
 
-#include <thread>
+#include <ios>
+#include <iostream>
+#include <chrono>
 #include <functional>
 #include <utility>
 #include <system_error>
 #include <exception>
 #include <pthread.h>
+#include <time.h>
 
 #include "unique_ptr.h"
 #include "integer_sequence.h"
@@ -53,15 +56,12 @@ void* thread_entry(void* param);
 
 } // namespace detail
 
-namespace this_thread
-{
-    // __thread 
-
-} // namespace this_thread
-
 class Thread
 {
 public:
+
+    using native_handle_type = ::pthread_t;
+
     class id
     {
     friend class Thread;
@@ -98,19 +98,24 @@ public:
 
     template<typename CharT, typename Traits>
     friend std::basic_ostream<CharT, Traits>&
-        operator<<(std::basic_ostream<CharT, Traits>& ost, id id)
+        operator<<(std::basic_ostream<CharT, Traits>& ost, id p_id)
     {
-        ost << id.tid_;
+        if (p_id == id())
+            ost << "thread::id of a non-executing thread";
+        else
+        {
+            ost << p_id.tid_;
+        }
         return ost;
     }
 
     public:
-        id() noexcept : tid_(0) { }
+        id(native_handle_type tid = 0) noexcept : tid_(tid) { }
+
     private:
-        ::pthread_t tid_;
+        native_handle_type tid_;
     };
 
-    using native_handle_type = ::pthread_t;
 
     Thread() noexcept
         : id_(), data_(nullptr)
@@ -123,7 +128,7 @@ public:
     explicit Thread(Function&& f, Args&&... args)
         : data_(new detail::Thread_data<Function, Args...>(std::forward<Function>(f), std::forward<Args>(args)...))
     {
-        if (int ret = ::pthread_create(&id_.tid_, NULL, detail::thread_entry, (void*)data_); ret != 0)
+        if (int ret = ::pthread_create(&id_.tid_, 0, detail::thread_entry, (void*)data_); ret != 0)
         {
             throw std::system_error(std::error_code(ret, std::generic_category()));
         }
@@ -145,12 +150,60 @@ public:
 
     void detach();
 
-    void swap(Thread&& other) noexcept;
+    void swap(Thread& other) noexcept;
+
+    static unsigned int hardware_concurrency() noexcept;
 
 private:
     id id_;
     detail::Thread_data_base* data_;
 };
+
+
+namespace this_thread
+{
+
+extern thread_local Thread::id id;
+
+inline Thread::id get_id() noexcept
+{
+    if (id == Thread::id())
+    {
+        id = Thread::id(::pthread_self());
+    }
+    return id;
+}
+
+inline void yield()
+{
+    ::pthread_yield();
+}
+
+template<typename Rep, typename Period>
+void sleep_for(const std::chrono::duration<Rep, Period>& sleep_duration)
+{
+    if (sleep_duration <= sleep_duration.zero())
+        return;
+
+    auto s  = std::chrono::duration_cast<std::chrono::seconds>(sleep_duration);
+    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(sleep_duration-s);
+
+    ::timespec ts = { 
+        static_cast<std::time_t>(s.count()),
+        static_cast<long>(ns.count())
+    };
+    ::nanosleep(&ts, 0);
+}
+
+template<typename Clock, typename Duration>
+void sleep_until(const std::chrono::time_point<Clock, Duration>& sleep_time)
+{
+    auto now = Clock::now();
+    if (now < sleep_time)
+        sleep_for(sleep_time - now);
+}
+
+} // namespace this_thread
 
 } // namespace cyy
 

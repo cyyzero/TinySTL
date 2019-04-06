@@ -1,7 +1,12 @@
 #include "thread.h"
 
+#include <pthread.h>
+#include <sys/sysinfo.h>
+
 using namespace cyy;
 using namespace std;
+
+thread_local Thread::id cyy::this_thread::id = Thread::id();
 
 void* cyy::detail::thread_entry(void* param)
 {
@@ -13,7 +18,7 @@ void* cyy::detail::thread_entry(void* param)
 Thread::Thread(Thread&& other) noexcept
     : id_(), data_(nullptr)
 {
-    swap(std::move(other));
+    swap(other);
 }
 
 Thread::Thread::~Thread()
@@ -30,7 +35,7 @@ Thread& Thread::operator=(Thread&& other) noexcept
     {
         std::terminate();
     }
-    swap(std::move(other));
+    swap(other);
     return *this;
 }
 
@@ -54,7 +59,7 @@ void Thread::join()
     int err = EINVAL;
     if (id_ != id())
     {
-        err = ::pthread_join(id_.tid_, nullptr);
+        err = ::pthread_join(id_.tid_, 0);
     }
     if (err != 0)
     {
@@ -76,9 +81,17 @@ void Thread::detach()
     id_ = id();
 }
 
-void Thread::swap(Thread&& other) noexcept
+void Thread::swap(Thread& other) noexcept
 {
     std::swap(id_.tid_, other.id_.tid_);
     std::swap(data_, other.data_);
+}
+
+unsigned int Thread::hardware_concurrency() noexcept
+{
+    auto n = ::get_nprocs();
+    if (n < 0)
+        n = 0;
+    return n;
 }
 
