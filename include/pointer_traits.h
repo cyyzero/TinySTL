@@ -105,7 +105,7 @@ struct pointer_traits<T*>
 {
     using pointer      = T*;
     using element_type = T;
-    using difference_type = std::ptrdiff_t;
+    using difference_type = std::ptrdiff_t; 
 
     template<typename U>
     using rebind = U*;
