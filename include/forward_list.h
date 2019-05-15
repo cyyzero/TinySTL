@@ -933,6 +933,44 @@ public:
         head_impl.head.next = head;
     }
 
+    // remove all consecutive duplicate elements
+    void unique()
+    {
+        Node_base* curr = head_impl.head.next;
+        Node_base* last_equle = nullptr;
+        while (curr)
+        {
+            if (*(static_cast<Node*>(curr)->valptr()) ==  *(static_cast<Node*>(last_equle)->valptr()))
+            {
+                curr = erase_after_impl(curr);
+            }
+            else
+            {
+                last_equle = curr;
+                curr = curr->next;
+            }
+        }
+    }
+
+    template<typename BinaryPredicate>
+    void unique(BinaryPredicate p)
+    {
+        Node_base* curr = head_impl.head.next;
+        Node_base* last_equle = nullptr;
+        while (curr)
+        {
+            if (p(*(static_cast<Node*>(curr)->valptr()), *(static_cast<Node*>(last_equle)->valptr())))
+            {
+                curr = erase_after_impl(curr);
+            }
+            else
+            {
+                last_equle = curr;
+                curr = curr->next;
+            }
+        }
+    }
+
     // sort the elements 
     void sort()
     {
