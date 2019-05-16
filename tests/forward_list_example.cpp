@@ -298,4 +298,22 @@ int main()
         list.reverse();
         std::cout << "descending: " << list << "\n";
     }
+
+    std::cout << "\nTest for unique:\n";
+    {
+        Forward_list<int> x = {1, 2, 2, 3, 3, 2, 1, 1, 2};
+
+        std::cout << "contents before:";
+        for (auto val : x)
+            std::cout << ' ' << val;
+        std::cout << '\n';
+        // output 1 2 2 3 3 2 1 1 2
+
+        x.unique();
+        std::cout << "contents after unique():";
+        for (auto val : x)
+            std::cout << ' ' << val;
+        std::cout << '\n';
+        // output 1 2 3 2 1 2
+    }
 }

@@ -86,7 +86,7 @@ struct Fwd_list_iterator
     using iterator_category = std::forward_iterator_tag;
 
     Fwd_list_iterator() noexcept
-        : node()
+        : node(nullptr)
     {
     }
 
@@ -163,7 +163,7 @@ struct Fwd_list_const_iterator
     using iterator_category = std::forward_iterator_tag;
 
     Fwd_list_const_iterator() noexcept
-        : node()
+        : node(nullptr)
     {
     }
 
@@ -602,7 +602,7 @@ public:
         Node_base* it = &head_impl.head;
         for (; it->next != nullptr && first != last; it = it->next, ++first)
         {
-            *(static_cast<Node*>(it)->valptr()) = *first;
+            *(static_cast<Node*>(it->next)->valptr()) = *first;
         }
 
         if (first == last)
@@ -933,43 +933,47 @@ public:
         head_impl.head.next = head;
     }
 
+#define UNIQUE                                                         \
+    do                                                                 \
+    {                                                                  \
+        Node_base *last_equle = head_impl.head.next;                   \
+        if (last_equle == nullptr)                                     \
+            return;                                                    \
+        Node_base *curr = head_impl.head.next->next;                   \
+        while (curr)                                                   \
+        {                                                              \
+            if (COMPARE(*(static_cast<Node *>(curr)->valptr()),        \
+                        *(static_cast<Node *>(last_equle)->valptr()))) \
+            {                                                          \
+                curr = erase_after_impl(last_equle);                   \
+            }                                                          \
+            else                                                       \
+            {                                                          \
+                last_equle = curr;                                     \
+                curr = curr->next;                                     \
+            }                                                          \
+        }                                                              \
+    } while (0)
+
+#define COMPARE(v1, v2) (v1 == v2)
+
     // remove all consecutive duplicate elements
     void unique()
     {
-        Node_base* curr = head_impl.head.next;
-        Node_base* last_equle = nullptr;
-        while (curr)
-        {
-            if (*(static_cast<Node*>(curr)->valptr()) ==  *(static_cast<Node*>(last_equle)->valptr()))
-            {
-                curr = erase_after_impl(curr);
-            }
-            else
-            {
-                last_equle = curr;
-                curr = curr->next;
-            }
-        }
+        UNIQUE;
     }
+
+#undef COMPARE
+#define COMPARE(v1, v2) (p(v1, v2))
 
     template<typename BinaryPredicate>
     void unique(BinaryPredicate p)
     {
-        Node_base* curr = head_impl.head.next;
-        Node_base* last_equle = nullptr;
-        while (curr)
-        {
-            if (p(*(static_cast<Node*>(curr)->valptr()), *(static_cast<Node*>(last_equle)->valptr())))
-            {
-                curr = erase_after_impl(curr);
-            }
-            else
-            {
-                last_equle = curr;
-                curr = curr->next;
-            }
-        }
+        UNIQUE;
     }
+
+#undef UNIQUE
+#undef COMPARE
 
     // sort the elements 
     void sort()
