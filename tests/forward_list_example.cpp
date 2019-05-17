@@ -202,13 +202,10 @@ int main()
 
     std::cout << "\nTest for merge:\n";
     {
-        // Forward_list<int> list1 = { 5,9,0,1,3 };
-        // Forward_list<int> list2 = { 8,7,2,6,4 };
-        // TODO: implementate sort
-        // list1.sort();
-        // list2.sort();
-        Forward_list<int> list1 = { 0,1,3,5,9 };
-        Forward_list<int> list2 = { 2,4,6,7,8 };
+        Forward_list<int> list1 = { 5,9,0,1,3 };
+        Forward_list<int> list2 = { 8,7,2,6,4 };
+        list1.sort();
+        list2.sort();
         std::cout << "list1:  " << list1 << "\n";
         std::cout << "list2:  " << list2 << "\n";
         list1.merge(list2);
@@ -288,13 +285,10 @@ int main()
     std::cout << "\nTest for reverse:\n";
     {
         Forward_list<int> list = { 8,7,5,9,0,1,3,2,6,4 };
-        // Forward_list<int> list;
-        // Forward_list<int> list = { 8};
 
         std::cout << "before:     " << list << "\n";
-        // TODO: sort
-        // list.sort();
-        // std::cout << "ascending:  " << list << "\n";
+        list.sort();
+        std::cout << "ascending:  " << list << "\n";
         list.reverse();
         std::cout << "descending: " << list << "\n";
     }
@@ -315,5 +309,21 @@ int main()
             std::cout << ' ' << val;
         std::cout << '\n';
         // output 1 2 3 2 1 2
+    }
+
+    std::cout << "\nTest for sort()\n";
+    {
+        Forward_list<int> list = { 8,7,5,9,0,1,3,2,6,4 };
+        std::cout << "before:     " << list << "\n";
+        // before:      8 7 5 9 0 1 3 2 6 4
+        
+        list.sort();
+        std::cout << "ascending:  " << list << "\n";
+        // ascending:   0 1 2 3 4 5 6 7 8 9
+        
+        list.sort(std::greater<int>());
+        std::cout << "descending: " << list << "\n";
+        // descending:  9 8 7 6 5 4 3 2 1 0
+
     }
 }

@@ -978,13 +978,13 @@ public:
     // sort the elements 
     void sort()
     {
-        // TODO: finish
+        sort([] (const value_type& lhs, const value_type& rhs) { return lhs < rhs; });
     }
 
-    template <class Compare>
+    template <typename Compare>
     void sort(Compare comp)
     {
-        // TODO: finish
+        head_impl.head.next =  merge_sort(head_impl.head.next, comp);
     }
 
 private:
@@ -1096,6 +1096,76 @@ private:
                 it2->next = nullptr;
             }
         }
+    }
+
+    // used for sort
+
+    Node_base* get_mid_node(Node_base* head)
+    {
+        Node_base* one_step = head;
+        Node_base* two_step = head;
+        while (two_step && two_step->next)
+        {
+            one_step = one_step->next;
+            two_step = two_step->next;
+        }
+        return one_step;
+    }
+
+    template<typename Compare>
+    Node_base* merge(Node_base* l1, Node_base* l2, Compare comp)
+    {
+        Node_base tmp;
+        Node_base* head = &tmp;
+
+        while (l1 && l2)
+        {
+            if (comp(*static_cast<Node*>(l1)->valptr(),
+                  *static_cast<Node*>(l2)->valptr()))
+            {
+                head->next = l1;
+                head = l1;
+                l1 = l1->next;
+            }
+            else
+            {
+                head->next = l2;
+                head = l2;
+                l2 = l2->next;
+            }
+        }
+
+        auto l = l1 ? l1 : l2;
+        while (l)
+        {
+            head->next = l;
+            head = l;
+            l = l->next;
+        }
+
+        return tmp.next;
+    }
+
+    template<typename Compare>
+    Node_base* merge_sort(Node_base* head, Compare comp)
+    {
+        if (head == nullptr || head->next == nullptr)
+            return head;
+        Node_base* mid = get_mid_node(head);
+        Node_base* mid_next;
+        if (mid->next == nullptr)
+        {
+            mid_next = head->next;
+            head->next = nullptr;
+        }
+        else
+        {
+            mid_next = mid->next;
+            mid->next = nullptr;
+        }
+        Node_base* l1 = merge_sort(head, comp);
+        Node_base* l2 = merge_sort(mid_next, comp);
+        return merge(l1, l2, comp);
     }
 }; // class Forward_list
 
