@@ -1169,6 +1169,56 @@ private:
     }
 }; // class Forward_list
 
+template<typename T, typename Alloc>
+bool operator==(const Forward_list<T,Alloc>& lhs,
+                const Forward_list<T,Alloc>& rhs)
+{
+    auto lhs_it = lhs.cbegin(), rhs_it = rhs.cbegin();
+    for (; lhs_it != lhs.cend() && rhs_it != rhs.end();
+           ++lhs_it, ++rhs_it)
+    {
+        if (*lhs_it != *rhs_it)
+            return false;
+    }
+    return lhs_it == lhs.cend() && rhs_it == rhs_it.cend();
+}
+
+template<typename T, typename Alloc>
+bool operator!=(const Forward_list<T,Alloc>& lhs,
+                const Forward_list<T,Alloc>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template<typename T, typename Alloc>
+bool operator<(const Forward_list<T,Alloc>& lhs,
+               const Forward_list<T,Alloc>& rhs)
+{
+    return std::lexicographical_compare(lhs.cbegin(), lhs.cend(),
+                                        rhs.cbegin(), rhs.cend());
+}
+
+template<typename T, typename Alloc>
+bool operator>(const Forward_list<T,Alloc>& lhs,
+               const Forward_list<T,Alloc>& rhs)
+{
+    return rhs < lhs;
+}
+
+template<typename T, typename Alloc>
+bool operator>=(const Forward_list<T,Alloc>& lhs,
+                const Forward_list<T,Alloc>& rhs)
+{
+    return !(lhs < rhs);
+}
+
+template<typename T, typename Alloc>
+bool operator<=(const Forward_list<T,Alloc>& lhs,
+                const Forward_list<T,Alloc>& rhs)
+{
+    return !(rhs < lhs);
+}
+
 } // namespace cyy
 
 #endif // FORWARD_LIST_H
