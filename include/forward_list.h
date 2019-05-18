@@ -3,42 +3,13 @@
 
 #include <type_traits>
 #include "allocator.h"
+#include "aligned_buffer.h"
 #include "allocator_traits.h"
 
 namespace cyy
 {
 namespace detail
 {
-// aligned buffer used in Fwd_list_node
-template<typename T>
-struct aligned_buffer
-    : public std::aligned_storage<sizeof(T), alignof(T)>
-{
-    typename std::aligned_storage<sizeof(T), alignof(T)>::type storage;
-
-    aligned_buffer() = default;
-
-    void* address() noexcept
-    {
-        return static_cast<void*>(&storage);
-    }
-
-    const void* address() const noexcept
-    {
-        return static_cast<const void*>(&storage);
-    }
-
-    T* pointer() noexcept
-    {
-        return static_cast<T*>(address());
-    }
-
-    const T* pointer() const noexcept
-    {
-        return static_cast<const T*>(address());
-    }
-
-}; // class aligned_buffer
 
 // base class of Fwd_list_node
 struct Fwd_list_node_base
@@ -936,20 +907,20 @@ public:
 #define UNIQUE                                                         \
     do                                                                 \
     {                                                                  \
-        Node_base *last_equle = head_impl.head.next;                   \
-        if (last_equle == nullptr)                                     \
+        Node_base *last_equal = head_impl.head.next;                   \
+        if (last_equal == nullptr)                                     \
             return;                                                    \
         Node_base *curr = head_impl.head.next->next;                   \
         while (curr)                                                   \
         {                                                              \
             if (COMPARE(*(static_cast<Node *>(curr)->valptr()),        \
-                        *(static_cast<Node *>(last_equle)->valptr()))) \
+                        *(static_cast<Node *>(last_equal)->valptr()))) \
             {                                                          \
-                curr = erase_after_impl(last_equle);                   \
+                curr = erase_after_impl(last_equal);                   \
             }                                                          \
             else                                                       \
             {                                                          \
-                last_equle = curr;                                     \
+                last_equal = curr;                                     \
                 curr = curr->next;                                     \
             }                                                          \
         }                                                              \
