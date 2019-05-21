@@ -215,16 +215,33 @@ class List_base
 {
     class List_base_impl : public Alloc
     {
+    public:
+        List_base_impl(const Alloc& alloc)
+          : Alloc(alloc)
+        {
+        }
+
+        List_base_impl(Alloc&& alloc)
+          : Alloc(std::move(alloc))
+        {
+        }
+
+        List_node_base head;
     };
 
 public:
 private:
+    List_base_impl head_;
 };
 } // namespace detail
 
 template <typename T, typename Alloc = Allocator<T>>
 class List : public detail::List_base<T, Alloc>
 {
+public:
+
+private:
+
 };
 } // namespace cyy
 
