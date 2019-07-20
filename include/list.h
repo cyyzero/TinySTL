@@ -232,6 +232,7 @@ class List_base
 public:
 private:
     List_base_impl head_;
+    size_t length_;
 };
 } // namespace detail
 
