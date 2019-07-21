@@ -63,6 +63,16 @@ template <typename T>
 class List_iterator
 {
 public:
+
+    using self = List_iterator<T>;
+    using node_type = List_node<T>;
+
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = T;
+    using pointer = T*;
+    using reference = T&;
+
     List_iterator() noexcept
         : node(nullptr)
     {
@@ -84,17 +94,17 @@ public:
         node = rhs.node;
     }
 
-    T &operator*() const
+    reference operator*() const
     {
         return static_cast<List_node<T> *>(node)->valref();
     }
 
-    T *operator->() const
+    pointer operator->() const
     {
         return static_cast<List_node<T> *>(node)->valptr();
     }
 
-    List_iterator &operator++()
+    self &operator++()
     {
         node = node->next;
     }
