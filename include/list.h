@@ -136,6 +136,17 @@ template <typename T>
 class List_const_iterator
 {
 public:
+
+    using self = List_const_iterator<T>;
+    using node_type = List_node<T>;
+    using iterator = List_iterator<T>;
+
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = T;
+    using pointer = const T*;
+    using reference = const T&;
+
     List_const_iterator() noexcept
         : node(nullptr)
     {
@@ -157,36 +168,36 @@ public:
         node = rhs.node;
     }
 
-    const T &operator*() const
+    reference operator*() const
     {
         return static_cast<const List_node<T> *>(node)->valref();
     }
 
-    const T *operator->() const
+    pointer operator->() const
     {
         return static_cast<const List_node<T> *>(node)->valptr();
     }
 
-    List_const_iterator &operator++()
+    self& operator++()
     {
         node = node->next;
         return *this;
     }
 
-    List_const_iterator operator++(int)
+    self operator++(int)
     {
         auto tmp = *this;
         node = node->next;
         return tmp;
     }
 
-    List_const_iterator &operator--()
+    self& operator--()
     {
         node = node->prev;
         return *this;
     }
 
-    List_const_iterator operator--(int)
+    self operator--(int)
     {
         auto tmp = *this;
         node = node->prev;
@@ -223,9 +234,20 @@ public:
 template <typename T, typename Alloc>
 class List_base
 {
-    class List_base_impl : public Alloc
+protected:
+
+    using node_alloc_type = typename Alloc::template rebind<List_node<T>>::other;
+    using value_alloc_type = typename Alloc::template rebind<T>::other;
+
+    class List_base_impl : public node_alloc_type
     {
     public:
+
+        List_base_impl()
+          : node_alloc_type(), node()
+        {
+        }
+
         List_base_impl(const Alloc& alloc)
           : Alloc(alloc)
         {
@@ -236,13 +258,12 @@ class List_base
         {
         }
 
-        List_node_base head;
+        List_node<size_t> node;
     };
 
 public:
 private:
     List_base_impl head_;
-    size_t length_;
 };
 } // namespace detail
 
