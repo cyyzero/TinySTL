@@ -34,28 +34,13 @@ struct List_node_base
 template <typename T>
 struct List_node : public List_node_base
 {
-    T *valptr()
+    template<typename... Args>
+    List_node(Args&&... args)
+      : List_node_base(), data(std::forward<Args>(args)...)
     {
-        return static_cast<T *>(&storage);
     }
 
-    const T *valptr() const
-    {
-        return static_cast<const T *>(&storage);
-    }
-
-    // NEVER use before storage has been constructed as T or T has been destroyed
-    T &valref()
-    {
-        return *valptr();
-    }
-
-    const T &valref() const
-    {
-        return *valptr();
-    }
-
-    aligned_buffer<T> storage;
+    T data;
 };
 
 // iterator
@@ -96,12 +81,12 @@ public:
 
     reference operator*() const
     {
-        return static_cast<List_node<T> *>(node)->valref();
+        return static_cast<node_type *>(node)->data;
     }
 
     pointer operator->() const
     {
-        return static_cast<List_node<T> *>(node)->valptr();
+        return std::addressof(static_cast<node_type *>(node)->data);
     }
 
     self &operator++()
@@ -170,12 +155,12 @@ public:
 
     reference operator*() const
     {
-        return static_cast<const List_node<T> *>(node)->valref();
+        return static_cast<const node_type *>(node)->data;
     }
 
     pointer operator->() const
     {
-        return static_cast<const List_node<T> *>(node)->valptr();
+        return std::addressof(static_cast<const node_type *>(node)->data);
     }
 
     self& operator++()
@@ -244,26 +229,44 @@ protected:
     public:
 
         List_base_impl()
-          : node_alloc_type(), node()
+          : node_alloc_type(), node(0)
         {
         }
 
         List_base_impl(const Alloc& alloc)
-          : Alloc(alloc)
+          : Alloc(alloc), node(0)
         {
         }
 
         List_base_impl(Alloc&& alloc)
-          : Alloc(std::move(alloc))
+          : Alloc(std::move(alloc)), node(0)
         {
         }
 
         List_node<size_t> node;
     };
 
-public:
-private:
-    List_base_impl head_;
+    size_t get_size() const
+    {
+        return head.node.data;
+    }
+
+    void set_size(size_t n)
+    {
+        head.node.data = n;
+    }
+
+    void inc_size(size_t n)
+    {
+        head.node.data += n;
+    }
+
+    void dec_size(size_t n)
+    {
+        head.node.data-= n;
+    }
+
+    List_base_impl head;
 };
 } // namespace detail
 
