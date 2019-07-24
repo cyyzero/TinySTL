@@ -224,6 +224,18 @@ protected:
     using node_alloc_type = typename Alloc::template rebind<List_node<T>>::other;
     using value_alloc_type = typename Alloc::template rebind<T>::other;
 
+    static
+    size_t distance(List_node_base* first, List_node_base* last)
+    {
+        size_t n = 0;
+        while (first != last)
+        {
+            first = first->next;
+            ++n;
+        }
+        return n;
+    }
+
     class List_base_impl : public node_alloc_type
     {
     public:
@@ -266,7 +278,89 @@ protected:
         head.node.data-= n;
     }
 
+    List_node<T>* get_node()
+    {
+        return head.node_alloc_type::allocate(1);
+    }
+
+    void put_node(List_node<T>* p)
+    {
+        head.node_alloc_type::deallocate(p, 1);
+    }
+
     List_base_impl head;
+
+public:
+
+    using alloc_type = Alloc;
+
+    node_alloc_type& get_node_allocator()
+    {
+        return *static_cast<node_alloc_type*>(&head);
+    }
+
+    const node_alloc_type& get_node_allocator() const
+    {
+        return *static_cast<const node_alloc_type*>(&head);
+    }
+
+    value_alloc_type get_value_allocator() const
+    {
+        return value_alloc_type(get_node_allocator());
+    }
+
+    alloc_type get_allocator() const
+    {
+        return alloc_type(get_node_allocator());
+    }
+
+    List_base()
+      : head()
+    {
+        init();
+    }
+
+    List_base(const alloc_type& a) noexcept
+      : head(a)
+    {
+        init();
+    }
+
+    List_base(List_base&& other) noexcept
+      : head(std::move(other.get_node_allocator()))
+    {
+        List_node_base* p = std::addressof(other.head.node);
+        if (p->next == p)
+            init();
+        else
+        {
+            head.node.prev = p->prev;
+            head.node.next = p->next;
+            head.node.next->prev = head.node.prev->next = std::addressof(head.node);
+            set_size(other.get_size());
+            other.init();
+        }
+    }
+
+    ~List_base() noexcept
+    {
+        List_node_base* tail = std::addressof(head.node);
+        List_node_base* curr = tail->next;
+        while (curr != tail)
+        {
+            auto tmp = curr->next;
+            head.node_alloc_type::deallocate(curr, 1);
+            curr = tmp;
+        }
+    }
+
+private:
+    void init()
+    {
+        head.node.prev = &head.node;
+        head.node.next = &head.node;
+    }
+
 };
 } // namespace detail
 
@@ -274,6 +368,19 @@ template <typename T, typename Alloc = Allocator<T>>
 class List : public detail::List_base<T, Alloc>
 {
 public:
+    using value_type             = T;
+    using allocator_type         = Alloc;
+    using size_type              = size_t;
+    using difference_type        = std::ptrdiff_t;
+    using reference              = value_type&;
+    using const_reference        = const value_type&;
+    using pinter                 = typename Allocator_traits<Alloc>::pointer;
+    using const_pointer          = typename Allocator_traits<Alloc>::const_pointer;
+    using iterator               = detail::List_iterator<T>;
+    using const_iterator         = detail::List_const_iterator<T>;
+    using reverse_iterator       = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
 
 private:
 
