@@ -365,8 +365,20 @@ private:
 } // namespace detail
 
 template <typename T, typename Alloc = Allocator<T>>
-class List : public detail::List_base<T, Alloc>
+class List : protected detail::List_base<T, Alloc>
 {
+    using base_type = detail::List_base<T, Alloc>;
+    using value_alloc_type = typename base_type::value_alloc_type;
+    using node_alloc_type = typename base_type::node_alloc_type;
+    using alloc_value_type = typename Alloc::value_type;
+    using node_type = detail::List_node<T>;
+
+    using base_type::head;
+    using base_type::put_node;
+    using base_type::get_node;
+    using base_type::get_value_allocator;
+    using base_type::get_node_allocator;
+
 public:
     using value_type             = T;
     using allocator_type         = Alloc;
@@ -381,8 +393,22 @@ public:
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-
 private:
+    template<typename... Args>
+    node_type* create_node(Args&&... args)
+    {
+        node_type* p = get_node();
+        try
+        {
+            get_node_allocator().construct(p, std::forward<Args>(args)...);
+            return p;
+        }
+        catch(...)
+        {
+            put_node(p);
+            throw;
+        }
+    }
 
 };
 } // namespace cyy
