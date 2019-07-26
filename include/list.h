@@ -393,6 +393,30 @@ public:
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
+    // constructor
+    List()
+      : base_type()
+    {
+    }
+
+    explicit
+    List(const allocator_type& a) noexcept
+      : base_type(node_alloc_type(a))
+    {
+    }
+
+    explicit
+    List(size_t n)
+    {
+        // TODO: impl
+    }
+
+    List(size_t n, const value_type& value, const allocator_type& a = allocator_type())
+      : base_type(node_alloc_type(a))
+    {
+        // TODO: impl
+    }
+
 private:
     template<typename... Args>
     node_type* create_node(Args&&... args)
