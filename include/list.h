@@ -400,22 +400,48 @@ public:
     }
 
     explicit
-    List(const allocator_type& a) noexcept
-      : base_type(node_alloc_type(a))
+    List(const allocator_type& alloc) noexcept
+      : base_type(node_alloc_type(alloc))
     {
     }
 
     explicit
-    List(size_t n)
+    List(size_t count, const allocator_type& alloc = allocator_type())
     {
         // TODO: impl
     }
 
-    List(size_t n, const value_type& value, const allocator_type& a = allocator_type())
-      : base_type(node_alloc_type(a))
+    List(size_t count, const value_type& value, const allocator_type& alloc = allocator_type())
+      : base_type(node_alloc_type(alloc))
     {
         // TODO: impl
     }
+
+    template<typename InputIt>
+    List(InputIt first, InputIt last, const allocator_type& alloc = allocator_type())
+    {
+        // TODO: impl
+    }
+
+    List(const List& other)
+    {
+
+    }
+
+    List(const List& other, const allocator_type& alloc)
+      : base_type(node_alloc_type(alloc))
+    {
+
+    }
+
+    List(List&& other)
+      : base_type(std::move(other.base_type))
+    {
+
+    }
+
+    
+
 
 private:
     template<typename... Args>
