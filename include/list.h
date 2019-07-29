@@ -417,7 +417,7 @@ public:
         // TODO: impl
     }
 
-    template<typename InputIt>
+    template<typename InputIt, typename = typename std::enable_if<std::is_convertible<std::input_iterator_tag, std::iterator_traits<InputIt>::iterator_category>::value>::type>
     List(InputIt first, InputIt last, const allocator_type& alloc = allocator_type())
     {
         // TODO: impl
@@ -440,8 +440,16 @@ public:
 
     }
 
-    
+    List(List&& other, const allocator_type& alloc)
+      : base_type(std::move(other.base_type))
+    {
+        
+    }
 
+    List(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
+      : List(init.begin(), init.end(), alloc)
+    {
+    }
 
 private:
     template<typename... Args>
