@@ -245,13 +245,13 @@ protected:
         {
         }
 
-        List_base_impl(const Alloc& alloc)
-          : Alloc(alloc), node(0)
+        List_base_impl(const node_alloc_type& alloc)
+          : node_alloc_type(alloc), node(0)
         {
         }
 
-        List_base_impl(Alloc&& alloc)
-          : Alloc(std::move(alloc)), node(0)
+        List_base_impl(node_alloc_type&& alloc)
+          : node_alloc_type(std::move(alloc)), node(0)
         {
         }
 
@@ -320,8 +320,8 @@ public:
         init();
     }
 
-    List_base(const alloc_type& a) noexcept
-      : head(a)
+    List_base(const node_alloc_type& alloc) noexcept
+      : head(alloc)
     {
         init();
     }
@@ -329,17 +329,13 @@ public:
     List_base(List_base&& other) noexcept
       : head(std::move(other.get_node_allocator()))
     {
-        List_node_base* p = std::addressof(other.head.node);
-        if (p->next == p)
-            init();
-        else
-        {
-            head.node.prev = p->prev;
-            head.node.next = p->next;
-            head.node.next->prev = head.node.prev->next = std::addressof(head.node);
-            set_size(other.get_size());
-            other.init();
-        }
+        rvalue_ref_init(std::move(other));
+    }
+
+    List_base(List_base&& other, const node_alloc_type& alloc) noexcept
+      : head(alloc)
+    {
+        rvalue_ref_init(std::move(other));
     }
 
     ~List_base() noexcept
@@ -359,6 +355,21 @@ private:
     {
         head.node.prev = &head.node;
         head.node.next = &head.node;
+    }
+
+    void rvalue_ref_init(List_base&& other)
+    {
+        List_node_base* p = std::addressof(other.head.node);
+        if (p->next == p)
+            init();
+        else
+        {
+            head.node.prev = p->prev;
+            head.node.next = p->next;
+            head.node.next->prev = head.node.prev->next = std::addressof(head.node);
+            set_size(other.get_size());
+            other.init();
+        }
     }
 
 };
@@ -441,7 +452,7 @@ public:
     }
 
     List(List&& other, const allocator_type& alloc)
-      : base_type(std::move(other.base_type))
+      : base_type(std::move(other.base_type), node_alloc_type(alloc))
     {
         
     }
