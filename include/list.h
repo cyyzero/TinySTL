@@ -329,13 +329,13 @@ public:
     List_base(List_base&& other) noexcept
       : head(std::move(other.get_node_allocator()))
     {
-        rvalue_ref_init(std::move(other));
+        move_ctor_impl(std::move(other));
     }
 
     List_base(List_base&& other, const node_alloc_type& alloc) noexcept
       : head(alloc)
     {
-        rvalue_ref_init(std::move(other));
+        move_ctor_impl(std::move(other));
     }
 
     ~List_base() noexcept
@@ -357,7 +357,7 @@ private:
         head.node.next = &head.node;
     }
 
-    void rvalue_ref_init(List_base&& other)
+    void move_ctor_impl(List_base&& other)
     {
         List_node_base* p = std::addressof(other.head.node);
         if (p->next == p)
@@ -378,11 +378,12 @@ private:
 template <typename T, typename Alloc = Allocator<T>>
 class List : protected detail::List_base<T, Alloc>
 {
-    using base_type = detail::List_base<T, Alloc>;
+    using base_type        = detail::List_base<T, Alloc>;
     using value_alloc_type = typename base_type::value_alloc_type;
-    using node_alloc_type = typename base_type::node_alloc_type;
+    using node_alloc_type  = typename base_type::node_alloc_type;
     using alloc_value_type = typename Alloc::value_type;
-    using node_type = detail::List_node<T>;
+    using node_type        = detail::List_node<T>;
+    using node_base_type   = detail::List_node_base;
 
     using base_type::head;
     using base_type::put_node;
@@ -418,14 +419,15 @@ public:
 
     explicit
     List(size_t count, const allocator_type& alloc = allocator_type())
+      : base_type(node_alloc_type(alloc))
     {
-        // TODO: impl
+        default_initialize(count);
     }
 
     List(size_t count, const value_type& value, const allocator_type& alloc = allocator_type())
       : base_type(node_alloc_type(alloc))
     {
-        // TODO: impl
+        fill_initialize(count, value)
     }
 
     template<typename InputIt, typename = typename std::enable_if<std::is_convertible<std::input_iterator_tag, std::iterator_traits<InputIt>::iterator_category>::value>::type>
@@ -476,6 +478,22 @@ private:
         {
             put_node(p);
             throw;
+        }
+    }
+
+    void default_initialize(size_t count)
+    {
+        for (size_t i = 0; i < count; ++i)
+        {
+            emplace_back();
+        }
+    }
+
+    void fill_initialize(size_t count, const value_type& value)
+    {
+        for (size_t i = 0; i < count; ++i)
+        {
+            push_back(value);
         }
     }
 
