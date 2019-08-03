@@ -464,6 +464,38 @@ public:
     {
     }
 
+    // return the allocator associated with the container
+    allocator_type get_allocator() const
+    {
+        return base_type::get_allocator();
+    }
+
+    // access the first element
+    reference front()
+    {
+        return *begin();
+    }
+
+    const_reference front() const
+    {
+        return *begin();
+    }
+
+    // access the last element
+    reference back()
+    {
+        auto tmp = end();
+        --tmp;
+        return *tmp;
+    }
+
+    const_reference back() const
+    {
+        auto tmp = end();
+        --tmp;
+        return *tmp;
+    }
+
 private:
     template<typename... Args>
     node_type* create_node(Args&&... args)
