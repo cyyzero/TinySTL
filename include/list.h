@@ -92,6 +92,7 @@ public:
     self &operator++()
     {
         node = node->next;
+        return *this;
     }
 
     List_iterator operator++(int)
@@ -143,7 +144,7 @@ public:
     }
 
     explicit
-    List_const_iterator(List_node_base *n) noexcept
+    List_const_iterator(const List_node_base *n) noexcept
         : node(n)
     {
     }
@@ -295,7 +296,7 @@ protected:
         while (curr != tail)
         {
             auto tmp = curr->next;
-            head.node_alloc_type::deallocate(curr, 1);
+            head.node_alloc_type::deallocate(static_cast<List_node<T>*>(curr), 1);
             curr = tmp;
         }
     }
@@ -435,8 +436,9 @@ public:
         fill_initialize(count, value);
     }
 
-    template<typename InputIt, typename = typename std::enable_if<std::is_convertible<std::input_iterator_tag,
-        std::iterator_traits<InputIt>::iterator_category>::value>::type>
+    template<typename InputIt, typename = typename std::enable_if<std::is_convertible<
+        typename std::iterator_traits<InputIt>::iterator_category,
+        std::input_iterator_tag>::value>::type>
     List(InputIt first, InputIt last, const allocator_type& alloc = allocator_type())
       : base_type(node_alloc_type(alloc))
     {
@@ -456,12 +458,12 @@ public:
     }
 
     List(List&& other)
-      : base_type(std::move(other.base_type))
+      : base_type(std::move(other))
     {
     }
 
     List(List&& other, const allocator_type& alloc)
-      : base_type(std::move(other.base_type), node_alloc_type(alloc))
+      : base_type(std::move(other), node_alloc_type(alloc))
     {
     }
 
@@ -506,39 +508,39 @@ public:
     // return an iterator to the beginning
     iterator begin() noexcept
     {
-        return iterator(head.data.next);
+        return iterator(head.node.next);
     }
 
     const_iterator begin() const noexcept
     {
-        return const_iterator(head.data.next);
+        return const_iterator(head.node.next);
     }
 
     const_iterator cbegin() const noexcept
     {
-        return const_iterator(head.data.next);
+        return const_iterator(head.node.next);
     }
 
     // return an iterator to the end
     iterator end() noexcept
     {
-        return iterator(&head.data);
+        return iterator(&head.node);
     }
 
     const_iterator end() const noexcept
     {
-        return const_iterator(&head.data);
+        return const_iterator(&head.node);
     }
 
     const_iterator cend() const noexcept
     {
-        return const_iterator(&head.data);
+        return const_iterator(&head.node);
     }
 
     // return a reverse iterator to the beginning
     reverse_iterator rbegin() noexcept
     {
-        return reverse_iterator(end())
+        return reverse_iterator(end());
     }
 
     const_reverse_iterator rbegin() const noexcept
@@ -583,10 +585,11 @@ public:
     void emplace_back(Args&&... args)
     {
         auto n = create_node(std::forward<Args>(args)...);
-        auto prev = head.data.prev;
+        auto prev = head.node.prev;
+        head.node.prev = n;
+        n->next = &head.node;
         prev->next = n;
         n->prev = prev;
-        n->next = &head.data;
     }
 
 private:
