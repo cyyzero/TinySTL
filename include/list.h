@@ -288,6 +288,18 @@ protected:
         head.node_alloc_type::deallocate(p, 1);
     }
 
+    void clear()
+    {
+        List_node_base* tail = std::addressof(head.node);
+        List_node_base* curr = tail->next;
+        while (curr != tail)
+        {
+            auto tmp = curr->next;
+            head.node_alloc_type::deallocate(curr, 1);
+            curr = tmp;
+        }
+    }
+
     List_base_impl head;
 
 public:
@@ -340,14 +352,7 @@ public:
 
     ~List_base() noexcept
     {
-        List_node_base* tail = std::addressof(head.node);
-        List_node_base* curr = tail->next;
-        while (curr != tail)
-        {
-            auto tmp = curr->next;
-            head.node_alloc_type::deallocate(curr, 1);
-            curr = tmp;
-        }
+        clear();
     }
 
 private:
@@ -405,7 +410,7 @@ public:
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    // constructor
+    // constructors
     List()
       : base_type()
     {
@@ -427,41 +432,43 @@ public:
     List(size_t count, const value_type& value, const allocator_type& alloc = allocator_type())
       : base_type(node_alloc_type(alloc))
     {
-        fill_initialize(count, value)
+        fill_initialize(count, value);
     }
 
-    template<typename InputIt, typename = typename std::enable_if<std::is_convertible<std::input_iterator_tag, std::iterator_traits<InputIt>::iterator_category>::value>::type>
+    template<typename InputIt, typename = typename std::enable_if<std::is_convertible<std::input_iterator_tag,
+        std::iterator_traits<InputIt>::iterator_category>::value>::type>
     List(InputIt first, InputIt last, const allocator_type& alloc = allocator_type())
+      : base_type(node_alloc_type(alloc))
     {
-        // TODO: impl
+        range_initialize(first, last);
     }
 
     List(const List& other)
+      : base_type(node_alloc_type(other.get_node_allocator()))
     {
-
+        range_initialize(other.begin(), other.end());
     }
 
     List(const List& other, const allocator_type& alloc)
       : base_type(node_alloc_type(alloc))
     {
-
+        range_initialize(other.begin(), other.end());
     }
 
     List(List&& other)
       : base_type(std::move(other.base_type))
     {
-
     }
 
     List(List&& other, const allocator_type& alloc)
       : base_type(std::move(other.base_type), node_alloc_type(alloc))
     {
-        
     }
 
     List(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
-      : List(init.begin(), init.end(), alloc)
+      : List(node_alloc_type(alloc))
     {
+        range_initialize(init.begin(), init.end());
     }
 
     // return the allocator associated with the container
@@ -496,6 +503,92 @@ public:
         return *tmp;
     }
 
+    // return an iterator to the beginning
+    iterator begin() noexcept
+    {
+        return iterator(head.data.next);
+    }
+
+    const_iterator begin() const noexcept
+    {
+        return const_iterator(head.data.next);
+    }
+
+    const_iterator cbegin() const noexcept
+    {
+        return const_iterator(head.data.next);
+    }
+
+    // return an iterator to the end
+    iterator end() noexcept
+    {
+        return iterator(&head.data);
+    }
+
+    const_iterator end() const noexcept
+    {
+        return const_iterator(&head.data);
+    }
+
+    const_iterator cend() const noexcept
+    {
+        return const_iterator(&head.data);
+    }
+
+    // return a reverse iterator to the beginning
+    reverse_iterator rbegin() noexcept
+    {
+        return reverse_iterator(end())
+    }
+
+    const_reverse_iterator rbegin() const noexcept
+    {
+        return const_reverse_iterator(end());
+    }
+
+    const_reverse_iterator crbegin() const noexcept
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    // return a reverse iterator to the end
+    reverse_iterator rend() noexcept
+    {
+        return reverse_iterator(begin());
+    }
+
+    const_reverse_iterator rend() const noexcept
+    {
+        return const_reverse_iterator(begin());
+    }
+
+    const_reverse_iterator crend() const noexcept
+    {
+        return const_reverse_iterator(cbegin());
+    }
+
+    // add an element to the end
+    void push_back(const value_type& value)
+    {
+        emplace_back(value);
+    }
+
+    void push_back(value_type&& value)
+    {
+        emplace_back(std::move(value));
+    }
+
+    // construct an element in-place at the end
+    template<typename... Args>
+    void emplace_back(Args&&... args)
+    {
+        auto n = create_node(std::forward<Args>(args)...);
+        auto prev = head.data.prev;
+        prev->next = n;
+        n->prev = prev;
+        n->next = &head.data;
+    }
+
 private:
     template<typename... Args>
     node_type* create_node(Args&&... args)
@@ -526,6 +619,16 @@ private:
         for (size_t i = 0; i < count; ++i)
         {
             push_back(value);
+        }
+    }
+
+    template<typename InputIt>
+    void range_initialize(InputIt first, InputIt last)
+    {
+        while (first != last)
+        {
+            emplace_back(*first);
+            ++first;
         }
     }
 
