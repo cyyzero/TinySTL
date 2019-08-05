@@ -418,6 +418,7 @@ class List : protected detail::List_base<T, Alloc>
     using base_type::get_value_allocator;
     using base_type::get_node_allocator;
     using base_type::create_node;
+    using base_type::inc_size;
 
 public:
     using value_type             = T;
@@ -618,6 +619,7 @@ public:
         n->next = &head.node;
         prev->next = n;
         n->prev = prev;
+        inc_size(1);
     }
 
 private:
