@@ -222,8 +222,12 @@ class List_base
 {
 protected:
 
-    using node_alloc_type = typename Alloc::template rebind<List_node<T>>::other;
-    using value_alloc_type = typename Alloc::template rebind<T>::other;
+    using node_type         = List_node<T>;
+    using node_alloc_type   = typename Alloc::template rebind<List_node<T>>::other;
+    using value_alloc_type  = typename Alloc::template rebind<T>::other;
+    using alloc_traits      = cyy::Allocator_traits<Alloc>;
+    using node_alloc        = typename alloc_traits:: template rebind_alloc<List_node<T>>;
+    using node_alloc_traits = typename alloc_traits:: template rebind_traits<List_node<T>>;
 
     static
     size_t distance(List_node_base* first, List_node_base* last)
@@ -279,24 +283,41 @@ protected:
         head.node.data-= n;
     }
 
-    List_node<T>* get_node()
+    node_type* get_node()
     {
-        return head.node_alloc_type::allocate(1);
+        return node_alloc_traits::allocate(get_node_allocator(), 1);
     }
 
     void put_node(List_node<T>* p)
     {
-        head.node_alloc_type::deallocate(p, 1);
+        node_alloc_traits::deallocate(get_node_allocator(), p, 1);
+    }
+
+    template<typename... Args>
+    node_type* create_node(Args&&... args)
+    {
+        node_type* p = get_node();
+        try
+        {
+            node_alloc_traits::construct(get_node_allocator(), p, std::forward<Args>(args)...);
+            return p;
+        }
+        catch(...)
+        {
+            put_node(p);
+            throw;
+        }
     }
 
     void clear()
     {
         List_node_base* tail = std::addressof(head.node);
-        List_node_base* curr = tail->next;
+        List_node_base* curr = head.node.next;
         while (curr != tail)
         {
             auto tmp = curr->next;
-            head.node_alloc_type::deallocate(static_cast<List_node<T>*>(curr), 1);
+            node_alloc_traits::destroy(get_node_allocator(), static_cast<List_node<T>*>(curr));
+            put_node(static_cast<List_node<T>*>(curr));
             curr = tmp;
         }
     }
@@ -396,6 +417,7 @@ class List : protected detail::List_base<T, Alloc>
     using base_type::get_node;
     using base_type::get_value_allocator;
     using base_type::get_node_allocator;
+    using base_type::create_node;
 
 public:
     using value_type             = T;
@@ -471,6 +493,12 @@ public:
       : List(node_alloc_type(alloc))
     {
         range_initialize(init.begin(), init.end());
+    }
+
+    // assign values to the container 
+    List& operator=(const List& other)
+    {
+        
     }
 
     // return the allocator associated with the container
@@ -593,22 +621,6 @@ public:
     }
 
 private:
-    template<typename... Args>
-    node_type* create_node(Args&&... args)
-    {
-        node_type* p = get_node();
-        try
-        {
-            get_node_allocator().construct(p, std::forward<Args>(args)...);
-            return p;
-        }
-        catch(...)
-        {
-            put_node(p);
-            throw;
-        }
-    }
-
     void default_initialize(size_t count)
     {
         for (size_t i = 0; i < count; ++i)

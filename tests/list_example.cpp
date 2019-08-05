@@ -18,6 +18,29 @@ std::ostream& operator<<(std::ostream& s, const List<T>& v) {
     return s << ']';
 }
 
+struct C
+{
+    friend std::ostream& operator<<(std::ostream& s, const C&)
+    {
+        s << "C";
+        return s;
+    }
+    C()
+    {
+        std::cout << "C ctor\n";
+    }
+
+    C(const C&)
+    {
+        std::cout << "C copy ctor\n";
+    }
+
+    ~C()
+    {
+        std::cout << "C dtor\n";
+    }
+};
+
 int main()
 {
     std::cout << "\nTest for List::iterator\n";
@@ -30,8 +53,8 @@ int main()
                   << (it2 == it2) << (it2 != it2)
                   << (it2 == it1) << (it2 != it1) << "\n";
     }
-    
-    std::cout << "\nTest for constructors\n";
+
+    std::cout << "\nTest for constructors and destructor\n";
     {
         // c++11 initializer list syntax:
         List<std::string> words1 {"the", "frogurt", "is", "also", "cursed"};
@@ -51,5 +74,9 @@ int main()
         List<std::string> words4(5, "Mo");
         // assert(words4 == List<std::string>{"Mo", "Mo", "Mo", "Mo", "Mo"});
         std::cout << "words4: " << words4 << '\n';
+
+        List<C> Cs(6, C());
+        std::cout << Cs << '\n';
     }
+
 }
