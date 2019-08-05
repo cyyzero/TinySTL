@@ -43,7 +43,7 @@ struct C
 
 int main()
 {
-    std::cout << "\nTest for List::iterator\n";
+    std::cout << "Test for List::iterator\n";
     {
         cyy::detail::List_iterator<int> it1;
         cyy::detail::List_const_iterator<int> it2;
@@ -78,5 +78,18 @@ int main()
         List<C> Cs(6, C());
         std::cout << Cs << '\n';
     }
+
+    std::cout << "\nTest for front() and back()\n";
+    {
+        List<char> letters {'o', 'm', 'g', 'w', 't', 'f'};
+        assert(letters.front() == 'o');
+        assert(letters.back() == 'f');
+        std::cout << "The first character is: " << letters.front() << '\n';
+        std::cout << "The last character is: " << letters.back() << '\n';
+    }
+
+
+    
+
 
 }
