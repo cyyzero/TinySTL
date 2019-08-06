@@ -88,8 +88,38 @@ int main()
         std::cout << "The last character is: " << letters.back() << '\n';
     }
 
-
+    std::cout << "\nTest for empty()\n";
+    {
+        List<int> numbers;
+        assert(numbers.empty());
+        std::cout << "Initially, numbers.empty(): " << numbers.empty() << '\n';
     
+        numbers.push_back(42);
+        numbers.push_back(13317);
+        assert(!numbers.empty());
+        std::cout << "After adding elements, numbers.empty(): " << numbers.empty() << '\n';
+    }
 
+    std::cout << "\nTest for size()\n";
+    {
+        List<int> nums {1, 3, 5, 7};
+        assert(nums.size() == 4);
+        std::cout << "nums contains " << nums.size() << " elements.\n";
+    }
+
+    std::cout << "\nTest for max_size()\n";
+    {
+        List<char> s;
+        std::cout << "Maximum size of a 'list' is " << s.max_size() << "\n";
+    }
+
+    std::cout << "\nTest for clear()\n";
+    {
+        List<int> l(10);
+        assert(l.size() == 10);
+        l.clear();
+        assert(l.size() == 0);
+        std::cout << "After clear(), size of l is " << l.size() << std::endl;
+    }
 
 }

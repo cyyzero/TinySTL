@@ -405,12 +405,13 @@ private:
 template <typename T, typename Alloc = Allocator<T>>
 class List : protected detail::List_base<T, Alloc>
 {
-    using base_type        = detail::List_base<T, Alloc>;
-    using value_alloc_type = typename base_type::value_alloc_type;
-    using node_alloc_type  = typename base_type::node_alloc_type;
-    using alloc_value_type = typename Alloc::value_type;
-    using node_type        = detail::List_node<T>;
-    using node_base_type   = detail::List_node_base;
+    using base_type         = detail::List_base<T, Alloc>;
+    using value_alloc_type  = typename base_type::value_alloc_type;
+    using node_alloc_type   = typename base_type::node_alloc_type;
+    using node_alloc_traits = typename base_type::node_alloc_traits;
+    using alloc_value_type  = typename Alloc::value_type;
+    using node_type         = detail::List_node<T>;
+    using node_base_type    = detail::List_node_base;
 
     using base_type::head;
     using base_type::put_node;
@@ -419,6 +420,9 @@ class List : protected detail::List_base<T, Alloc>
     using base_type::get_node_allocator;
     using base_type::create_node;
     using base_type::inc_size;
+    using base_type::dec_size;
+    using base_type::set_size;
+    using base_type::clear;
 
 public:
     using value_type             = T;
@@ -596,6 +600,31 @@ public:
     const_reverse_iterator crend() const noexcept
     {
         return const_reverse_iterator(cbegin());
+    }
+
+    // check whether the container is empty
+    bool empty() const noexcept
+    {
+        return head.node.next == &head.node;
+    }
+
+    // return the number of elements
+    size_type size() const noexcept
+    {
+        return head.node.data;
+    }
+
+    // return the maximum possible number of elements
+    size_type max_size() const noexcept
+    {
+        return node_alloc_traits::max_size(get_node_allocator());
+    }
+
+    // clear the contents
+    void clear() noexcept
+    {
+        base_type::clear();
+        set_size(0);
     }
 
     // add an element to the end
