@@ -651,6 +651,11 @@ public:
         inc_size(1);
     }
 
+    void swap(List& other)
+    {
+        std::swap(other.head.node, head.node);
+    }
+
 private:
     void default_initialize(size_t count)
     {
