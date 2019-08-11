@@ -684,6 +684,13 @@ private:
     }
 
 };
+
+template<typename T, typename Alloc>
+void swap(List<T,Alloc>& lhs,
+          List<T,Alloc>& rhs)
+{
+    lhs.swap(rhs);
+}
 } // namespace cyy
 
 #endif // LIST_H
