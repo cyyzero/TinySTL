@@ -627,6 +627,18 @@ public:
         set_size(0);
     }
 
+    iterator insert(const_iterator pos, const value_type& value)
+    {
+        node_base_type* prev = const_cast<node_base_type>(pos.node);
+        auto next = prev->next;
+        auto curr = create_node(value);
+        prev->next = curr;
+        curr->prev = prev;
+        curr->next = next;
+        next->prev = curr;
+        return iterator(curr);
+    }
+
     // add an element to the end
     void push_back(const value_type& value)
     {
