@@ -627,16 +627,41 @@ public:
         set_size(0);
     }
 
+    // insert element(s)
     iterator insert(const_iterator pos, const value_type& value)
     {
-        node_base_type* prev = const_cast<node_base_type>(pos.node);
-        auto next = prev->next;
-        auto curr = create_node(value);
-        prev->next = curr;
-        curr->prev = prev;
-        curr->next = next;
-        next->prev = curr;
-        return iterator(curr);
+        iterator it(insert_impl(const_cast<node_base_type*>(pos.node), value));
+        inc_size(1);
+        return it;
+    }
+
+    iterator insert( const_iterator pos, size_type count, const value_type& value)
+    {
+        node_base_type* p = const_cast<node_base_type*>(pos.node);
+        for (size_t i = 0; i < count; ++i)
+        {
+            p = insert_impl(p, value);
+        }
+        inc_size(count);
+        return iterator(p);
+    }
+
+    template<typename InputIt >
+    iterator insert(const_iterator pos, InputIt first, InputIt last)
+    {
+        node_base_type* p = const_cast<node_base_type*>(pos.node);
+        size_type count = 0;
+        for (; first != last; ++first, ++count)
+        {
+            p = insert_impl(p, *first);
+        }
+        inc_size(count);
+        return iterator(p);
+    }
+
+    iterator insert(const_iterator pos, std::initializer_list<T> ilist)
+    {
+        return insert(pos, ilist.begin(), ilist.end());
     }
 
     // add an element to the end
@@ -693,6 +718,14 @@ private:
             emplace_back(*first);
             ++first;
         }
+    }
+
+    template<typename... Args>
+    node_base_type* insert_impl(node_base_type* pos, Args&& ... args)
+    {
+        auto n = create_node(std::forward<Args>(args)...);
+        n->hook(pos);
+        return n;
     }
 
 };
