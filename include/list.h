@@ -17,12 +17,13 @@ struct List_node_base
     {
     }
 
+    // append this after node
     void hook(List_node_base *node) noexcept
     {
-        prev = node->prev;
-        next = node;
-        node->prev->next = this;
-        node->prev = this;
+        prev = node;
+        next = node->next;
+        node->next->prev = this;
+        node->next = this;
     }
 
     // void unhook()
@@ -679,12 +680,7 @@ public:
     template<typename... Args>
     void emplace_back(Args&&... args)
     {
-        auto n = create_node(std::forward<Args>(args)...);
-        auto prev = head.node.prev;
-        head.node.prev = n;
-        n->next = &head.node;
-        prev->next = n;
-        n->prev = prev;
+        insert_impl(head.node.prev, std::forward<Args>(args)...);
         inc_size(1);
     }
 
