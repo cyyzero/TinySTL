@@ -78,6 +78,7 @@ public:
     List_iterator &operator=(const List_iterator &rhs)
     {
         node = rhs.node;
+        return *this;
     }
 
     reference operator*() const
@@ -144,6 +145,11 @@ public:
     {
     }
 
+    List_const_iterator(const List_iterator<T>& it) noexcept
+        : node(it.node)
+    {
+    }
+
     explicit
     List_const_iterator(const List_node_base *n) noexcept
         : node(n)
@@ -153,6 +159,7 @@ public:
     List_const_iterator &operator=(const List_const_iterator &rhs) noexcept
     {
         node = rhs.node;
+        return *this;
     }
 
     reference operator*() const
@@ -310,6 +317,12 @@ protected:
         }
     }
 
+    void init()
+    {
+        head.node.prev = &head.node;
+        head.node.next = &head.node;
+    }
+
     void clear()
     {
         List_node_base* tail = std::addressof(head.node);
@@ -379,11 +392,6 @@ public:
     }
 
 private:
-    void init()
-    {
-        head.node.prev = &head.node;
-        head.node.next = &head.node;
-    }
 
     void move_ctor_impl(List_base&& other)
     {
@@ -424,6 +432,7 @@ class List : protected detail::List_base<T, Alloc>
     using base_type::dec_size;
     using base_type::set_size;
     using base_type::clear;
+    using base_type::init;
 
 public:
     using value_type             = T;
@@ -625,6 +634,7 @@ public:
     void clear() noexcept
     {
         base_type::clear();
+        base_type::init();
         set_size(0);
     }
 
@@ -673,6 +683,28 @@ public:
         p = insert_impl(p, std::forward<Args>(args)...);
         inc_size(1);
         return iterator(p);
+    }
+
+    // erase element(s)
+    iterator erase(const_iterator pos)
+    {
+        auto p = static_cast<node_type*>(const_cast<node_base_type*>(pos.node));
+        auto next = p->next;
+        auto prev = p->prev;
+        node_alloc_traits::destroy(get_node_allocator(), p);
+        put_node(p);
+        next->prev = prev;
+        prev->next = next;
+        return iterator(next);
+    }
+
+    iterator erase(const_iterator first, const_iterator last)
+    {
+        while (first != last)
+        {
+            first = erase(first);
+        }
+        return iterator(const_cast<node_base_type*>(last.node));
     }
 
     // add an element to the end

@@ -122,4 +122,41 @@ int main()
         std::cout << "After clear(), size of l is " << l.size() << std::endl;
     }
 
+    std::cout << "\nTest for erase()\n";
+    {
+        List<int> c{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        std::cout << c << '\n';
+        // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        c.erase(c.begin());
+        // assert(c == List<int>{1, 2, 3, 4, 5, 6, 7, 8, 9});
+        std::cout << c << '\n';
+        // [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+    
+        List<int>::iterator range_begin = c.begin();
+        List<int>::iterator range_end = c.begin();
+        std::advance(range_begin,2);
+        std::advance(range_end,5);
+    
+        c.erase(range_begin, range_end);
+
+        // assert(c == List<int>{1, 2, 6, 7, 8, 9});
+        std::cout << c << '\n';
+        // [1, 2, 6, 7, 8, 9]
+    
+        // Erase all even numbers (C++11 and later)
+        for (auto it = c.begin(); it != c.end(); ) {
+            if (*it % 2 == 0) {
+                it = c.erase(it);
+            } else {
+                ++it;
+            }
+        }
+
+        // assert(c == List<int>{1, 7, 9});
+        std::cout << c << '\n';
+        // [1, 7, 9]
+    }
+
 }
