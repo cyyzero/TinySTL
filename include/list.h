@@ -725,6 +725,23 @@ public:
         emplace(cend(), std::forward<Args>(args)...);
     }
 
+    // remove the last element
+    void pop_back()
+    {
+        erase(const_iterator(head.node.prev));
+    }
+
+    // insert an element to the beginning
+    void push_front(const value_type& value)
+    {
+        insert_impl(&head.node, value);
+    }
+
+    void push_front(value_type&& value)
+    {
+        insert_impl(&head.node, std::move(value));
+    }
+
     void swap(List& other)
     {
         std::swap(other.head.node, head.node);

@@ -159,4 +159,29 @@ int main()
         // [1, 7, 9]
     }
 
+    std::cout << "\nTest for pop_back()\n";
+    {
+        List<int> numbers;
+        std::cout << numbers << '\n';
+    
+        numbers.push_back(5);
+        numbers.push_back(3);
+        numbers.push_back(4);
+        // assert(numbers == List<int>{5, 3, 4});
+    
+        std::cout << numbers << '\n'; 
+    
+        numbers.pop_back();
+    
+        // assert(numbers == List<int>{5, 3});
+        std::cout << numbers << '\n'; 
+    }
+
+    std::cout << "\nTest for push_front()\n";
+    {
+        List<std::string> l{"the", "fxxk"};
+        l.push_front("What");
+        std::cout << l << '\n';
+    }
+
 }
