@@ -628,17 +628,17 @@ public:
         set_size(0);
     }
 
-    // insert element(s)
+    // insert element(s) before 
     iterator insert(const_iterator pos, const value_type& value)
     {
-        iterator it(insert_impl(const_cast<node_base_type*>(pos.node), value));
+        iterator it(insert_impl(const_cast<node_base_type*>(pos.node->prev), value));
         inc_size(1);
         return it;
     }
 
     iterator insert( const_iterator pos, size_type count, const value_type& value)
     {
-        node_base_type* p = const_cast<node_base_type*>(pos.node);
+        node_base_type* p = const_cast<node_base_type*>(pos.node->prev);
         for (size_t i = 0; i < count; ++i)
         {
             p = insert_impl(p, value);
@@ -650,7 +650,7 @@ public:
     template<typename InputIt >
     iterator insert(const_iterator pos, InputIt first, InputIt last)
     {
-        node_base_type* p = const_cast<node_base_type*>(pos.node);
+        node_base_type* p = const_cast<node_base_type*>(pos.node->prev);
         size_type count = 0;
         for (; first != last; ++first, ++count)
         {
@@ -663,6 +663,16 @@ public:
     iterator insert(const_iterator pos, std::initializer_list<T> ilist)
     {
         return insert(pos, ilist.begin(), ilist.end());
+    }
+
+    // insert a new element into the container directly before pos
+    template<typename... Args>
+    iterator emplace(const_iterator pos, Args&&... args)
+    {
+        node_base_type* p = const_cast<node_base_type*>(pos.node->prev);
+        p = insert_impl(p, std::forward<Args>(args)...);
+        inc_size(1);
+        return iterator(p);
     }
 
     // add an element to the end
@@ -680,8 +690,7 @@ public:
     template<typename... Args>
     void emplace_back(Args&&... args)
     {
-        insert_impl(head.node.prev, std::forward<Args>(args)...);
-        inc_size(1);
+        emplace(cend(), std::forward<Args>(args)...);
     }
 
     void swap(List& other)
