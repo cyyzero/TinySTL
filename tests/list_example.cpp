@@ -177,10 +177,13 @@ int main()
         std::cout << numbers << '\n'; 
     }
 
-    std::cout << "\nTest for push_front()\n";
+    std::cout << "\nTest for push_front(), emplace_front() and pop_front()\n";
     {
-        List<std::string> l{"the", "fxxk"};
-        l.push_front("What");
+        List<std::string> l{"fxxk"};
+        l.push_front("the");
+        l.emplace_front("what");
+        std::cout << l << '\n';
+        l.pop_front();
         std::cout << l << '\n';
     }
 

@@ -742,6 +742,19 @@ public:
         insert_impl(&head.node, std::move(value));
     }
 
+    // insert a new element to the beginning of the container
+    template<typename... Args>
+    void emplace_front(Args&&... args)
+    {
+        insert_impl(&head.node, std::forward<Args>(args)...);
+    }
+
+    // remove the first element of the container
+    void pop_front()
+    {
+        erase(begin());
+    }
+
     void swap(List& other)
     {
         std::swap(other.head.node, head.node);
