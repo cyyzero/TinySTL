@@ -187,4 +187,13 @@ int main()
         std::cout << l << '\n';
     }
 
+    std::cout << "\nTest for swap()\n";
+    {
+        List<int> l1{1,2,3};
+        List<int> l2{4,5,6};
+        std::cout << l1 << '\n' << l2 << '\n';
+        l1.swap(l2);
+        std::cout << l1 << '\n' << l2 << '\n';
+    }
+
 }
