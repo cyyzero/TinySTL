@@ -190,9 +190,13 @@ int main()
     std::cout << "\nTest for swap()\n";
     {
         List<int> l1{1,2,3};
-        List<int> l2{4,5,6};
+        List<int> l2{4,5};
         std::cout << l1 << '\n' << l2 << '\n';
         l1.swap(l2);
+        // assert(l1 == List<int>{4, 5});
+        // assert(l1.size() == 2);
+        // assert(l2 == List<int>{1,2,3});
+        // assert(l2.size() == 3);
         std::cout << l1 << '\n' << l2 << '\n';
     }
 

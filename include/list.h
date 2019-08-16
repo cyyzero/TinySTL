@@ -755,9 +755,17 @@ public:
         erase(begin());
     }
 
+    // swap the contents
     void swap(List& other)
     {
-        std::swap(other.head.node, head.node);
+        std::swap(head.node.prev, other.head.node.prev);
+        head.node.prev->next = &head.node;
+        other.head.node.prev->next = &other.head.node;
+        std::swap(head.node.next, other.head.node.next);
+        head.node.next->prev = &head.node;
+        head.node.next->prev = &head.node;
+        other.head.node.next->prev = &other.head.node;
+        std::swap(head.node.data, other.head.node.data);
     }
 
 private:
