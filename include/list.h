@@ -515,20 +515,7 @@ public:
     {
         if (&other != this)
         {
-            auto first1 = begin(), last1 = end();
-            auto first2 = other.cbegin(), last2 = other.cend();
-            for (; first1 != last1 && first2 != last2; ++first1, ++first2)
-            {
-                *first1 = *first2;
-            }
-            if (first2 == last2)
-            {
-                erase(first1, last1);
-            }
-            else
-            {
-                insert(first1, first2, last2);
-            }
+            range_assign(other.begin(), other.end());
         }
         return *this;
     }
@@ -537,6 +524,12 @@ public:
     {
         swap(other);
         other.clear();
+        return *this;
+    }
+
+    List& operator=(std::initializer_list<T> ilist)
+    {
+        range_assign(ilist.begin(), ilist.end());
         return *this;
     }
 
@@ -845,6 +838,24 @@ private:
         {
             emplace_back(*first);
             ++first;
+        }
+    }
+
+    template<typename InputIt>
+    void range_assign(InputIt first2, InputIt last2)
+    {
+        auto first1 = begin(), last1 = end();
+        for (; first1 != last1 && first2 != last2; ++first1, ++first2)
+        {
+            *first1 = *first2;
+        }
+        if (first2 == last2)
+        {
+            erase(first1, last1);
+        }
+        else
+        {
+            insert(first1, first2, last2);
         }
     }
 
