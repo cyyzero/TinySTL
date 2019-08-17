@@ -695,15 +695,19 @@ public:
         put_node(p);
         next->prev = prev;
         prev->next = next;
+        dec_size(1);
         return iterator(next);
     }
 
     iterator erase(const_iterator first, const_iterator last)
     {
+        size_t count = 0;
         while (first != last)
         {
             first = erase(first);
+            ++count;
         }
+        dec_size(count);
         return iterator(const_cast<node_base_type*>(last.node));
     }
 
@@ -753,6 +757,31 @@ public:
     void pop_front()
     {
         erase(begin());
+    }
+
+    // change the number of elements stored
+    void resize(size_type count)
+    {
+        while (size() > count)
+        {
+            pop_back();
+        }
+        while (size() < count)
+        {
+            emplace_back();
+        }
+    }
+
+    void resize(size_type count, const value_type& value)
+    {
+        while (size() > count)
+        {
+            pop_back();
+        }
+        while (size() < count)
+        {
+            emplace_back(value);
+        }
     }
 
     // swap the contents

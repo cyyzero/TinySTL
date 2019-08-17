@@ -200,4 +200,16 @@ int main()
         std::cout << l1 << '\n' << l2 << '\n';
     }
 
+    std::cout << "\nTest for resize()\n";
+    {
+        List<int> c = {1, 2, 3};
+        std::cout << "The list holds: " << c << '\n';
+        c.resize(5);
+        // assert(c == List<int>{1, 2, 3, 0, 0});
+        std::cout << "After resize up to 5: " << c << '\n';
+        c.resize(2);
+        // assert(c == List<int>{1, 2});
+        std::cout << "After resize down to 2: " << c << '\n';
+    }
+
 }
