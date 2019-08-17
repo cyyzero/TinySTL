@@ -79,6 +79,46 @@ int main()
         std::cout << Cs << '\n';
     }
 
+    std::cout << "\nTest for operator=()\n";
+    {
+        auto display_sizes = [] (
+            const List<int>& nums1,
+            const List<int>& nums2,
+            const List<int>& nums3)
+        {
+            std::cout << "nums1: " << nums1.size() 
+                    << " nums2: " << nums2.size()
+                    << " nums3: " << nums3.size() << '\n';
+        };
+
+        List<int> nums1 {3, 1, 4, 6, 5, 9};
+        List<int> nums2; 
+        List<int> nums3;
+    
+        assert(nums1.size() == 6);
+        assert(nums2.size() == 0);
+        assert(nums3.size() == 0);
+        std::cout << "Initially:\n";
+        display_sizes(nums1, nums2, nums3);
+    
+        // copy assignment copies data from nums1 to nums2
+        nums2 = nums1;
+        assert(nums1.size() == 6);
+        assert(nums2.size() == 6);
+        assert(nums3.size() == 0);
+        std::cout << "After assigment:\n"; 
+        display_sizes(nums1, nums2, nums3);
+    
+        // move assignment moves data from nums1 to nums3,
+        // modifying both nums1 and nums3
+        nums3 = std::move(nums1);
+        assert(nums1.size() == 0);
+        assert(nums2.size() == 6);
+        assert(nums3.size() == 6);
+        std::cout << "After move assigment:\n"; 
+        display_sizes(nums1, nums2, nums3);
+    }
+
     std::cout << "\nTest for front() and back()\n";
     {
         List<char> letters {'o', 'm', 'g', 'w', 't', 'f'};

@@ -513,7 +513,31 @@ public:
     // assign values to the container 
     List& operator=(const List& other)
     {
-        
+        if (&other != this)
+        {
+            auto first1 = begin(), last1 = end();
+            auto first2 = other.cbegin(), last2 = other.cend();
+            for (; first1 != last1 && first2 != last2; ++first1, ++first2)
+            {
+                *first1 = *first2;
+            }
+            if (first2 == last2)
+            {
+                erase(first1, last1);
+            }
+            else
+            {
+                insert(first1, first2, last2);
+            }
+        }
+        return *this;
+    }
+
+    List& operator=(List&& other)
+    {
+        swap(other);
+        other.clear();
+        return *this;
     }
 
     // return the allocator associated with the container
