@@ -533,6 +533,25 @@ public:
         return *this;
     }
 
+    // assign values to the container
+    void assign(size_type count, const T& value)
+    {
+        fill_assign(count, value);
+    }
+
+    template<typename InputIt, typename = typename std::enable_if<std::is_convertible<
+        typename std::iterator_traits<InputIt>::iterator_category,
+        std::input_iterator_tag>::value>::type>
+    void assign(InputIt first, InputIt last)
+    {
+        range_assign(first, last);
+    }
+
+    void assign(std::initializer_list<T> ilist)
+    {
+        range_assign(ilist.begin(), ilist.end());
+    }
+
     // return the allocator associated with the container
     allocator_type get_allocator() const
     {
@@ -838,6 +857,23 @@ private:
         {
             emplace_back(*first);
             ++first;
+        }
+    }
+
+    void fill_assign(size_type count, const T& value)
+    {
+        auto first = begin(), last = end();
+        for (; first != last && count; ++first, --count)
+        {
+            *first = value;
+        }
+        if (count)
+        {
+            insert(first, count, value);
+        }
+        else
+        {
+            erase(first, last);
         }
     }
 

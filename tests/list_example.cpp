@@ -119,6 +119,17 @@ int main()
         display_sizes(nums1, nums2, nums3);
     }
 
+    std::cout << "\nTest for assign()\n";
+    {
+        List<char> characters(2);
+        characters.assign(5, 'a');
+        // assert(characters == List<char>(5, 'a'));
+        std::cout << characters << "\n";
+        characters.assign({'f', 'k'});
+        // assert(characters == List<char>{'f', 'k'});
+        std::cout << characters << '\n';
+    }
+
     std::cout << "\nTest for front() and back()\n";
     {
         List<char> letters {'o', 'm', 'g', 'w', 't', 'f'};
