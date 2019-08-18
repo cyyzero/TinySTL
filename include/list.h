@@ -7,6 +7,12 @@
 
 namespace cyy
 {
+
+template <typename T, typename Alloc>
+class List_base;
+template <typename T, typename Alloc>
+class List;
+
 namespace detail
 {
 
@@ -45,9 +51,41 @@ struct List_node : public List_node_base
 };
 
 // iterator
+
+#define ITERATOR_FRIEND_OPERATION1(OPER, LHS_TYPE, RHS_TYPE) \
+template<typename U> \
+friend bool operator OPER (const LHS_TYPE<U>& lhs, const RHS_TYPE<U>& rhs);
+
+#define ITERATOR_FRIEND_OPERATION2(lhs_type, rhs_type) \
+    ITERATOR_FRIEND_OPERATION1(==, lhs_type, rhs_type) \
+    ITERATOR_FRIEND_OPERATION1(!=, lhs_type, rhs_type)
+
+#define ITERATOR_FRIEND_OPERATION3(type1, type2) \
+    ITERATOR_FRIEND_OPERATION2(type1, type1)     \
+    ITERATOR_FRIEND_OPERATION2(type1, type2)     \
+    ITERATOR_FRIEND_OPERATION2(type2, type1)     \
+    ITERATOR_FRIEND_OPERATION2(type2, type2)
+
+#define ITERATOR_FRIEND_OPERATION \
+ITERATOR_FRIEND_OPERATION3(List_iterator, List_const_iterator)
+
+template<typename T>
+class List_const_iterator;
+
 template <typename T>
 class List_iterator
 {
+    template <typename U,  typename Alloc>
+    friend class cyy::List_base;
+
+    template <typename U,  typename Alloc>
+    friend class cyy::List;
+
+    template<typename U>
+    friend class List_const_iterator;
+
+    ITERATOR_FRIEND_OPERATION
+
 public:
 
     using self = List_iterator<T>;
@@ -117,12 +155,21 @@ public:
         return tmp;
     }
 
+private:
     List_node_base *node;
 };
 
 template <typename T>
 class List_const_iterator
 {
+    template <typename U,  typename Alloc>
+    friend class cyy::List_base;
+
+    template <typename U,  typename Alloc>
+    friend class cyy::List;
+
+    ITERATOR_FRIEND_OPERATION
+
 public:
 
     using self = List_const_iterator<T>;
@@ -198,32 +245,38 @@ public:
         return tmp;
     }
 
+private:
     const List_node_base *node;
 };
 
 // compare between List_iterator and List_const_iterator
-#define LIST_COMPARE1(OPER, lhs_type, rhs_type)                                \
+#define LIST_ITERATOR_COMPARE1(OPER, lhs_type, rhs_type)                                \
     template <typename T>                                                      \
     inline bool operator OPER (const lhs_type<T> &lhs, const rhs_type<T> &rhs) \
     {                                                                          \
         return lhs.node OPER rhs.node;                                         \
     }
 
-#define LIST_COMPARE2(lhs_type, rhs_type) \
-    LIST_COMPARE1(==, lhs_type, rhs_type) \
-    LIST_COMPARE1(!=, lhs_type, rhs_type)
+#define LIST_ITERATOR_COMPARE2(lhs_type, rhs_type) \
+    LIST_ITERATOR_COMPARE1(==, lhs_type, rhs_type) \
+    LIST_ITERATOR_COMPARE1(!=, lhs_type, rhs_type)
 
-#define LIST_COMPARE3(type1, type2) \
-    LIST_COMPARE2(type1, type1)     \
-    LIST_COMPARE2(type1, type2)     \
-    LIST_COMPARE2(type2, type1)     \
-    LIST_COMPARE2(type2, type2)
+#define LIST_ITERATOR_COMPARE3(type1, type2) \
+    LIST_ITERATOR_COMPARE2(type1, type1)     \
+    LIST_ITERATOR_COMPARE2(type1, type2)     \
+    LIST_ITERATOR_COMPARE2(type2, type1)     \
+    LIST_ITERATOR_COMPARE2(type2, type2)
 
-    LIST_COMPARE3(List_iterator, List_const_iterator)
+    LIST_ITERATOR_COMPARE3(List_iterator, List_const_iterator)
 
-#undef LISt_COMPARE3
-#undef LIST_COMPARE2
-#undef LIST_COMPARE1
+#undef LIST_ITERATOR_COMPARE3
+#undef LIST_ITERATOR_COMPARE2
+#undef LIST_ITERATOR_COMPARE1
+
+#undef ITERATOR_FRIEND_OPERATION
+#undef ITERATOR_FRIEND_OPERATION1
+#undef ITERATOR_FRIEND_OPERATION2
+#undef ITERATOR_FRIEND_OPERATION3
 
 template <typename T, typename Alloc>
 class List_base
@@ -831,6 +884,57 @@ public:
         head.node.next->prev = &head.node;
         other.head.node.next->prev = &other.head.node;
         std::swap(head.node.data, other.head.node.data);
+    }
+
+    // merge two sorted lists
+    void merge(List& other)
+    {
+        merge(other, std::less<value_type>());
+    }
+
+    void merge(List&& other)
+    {
+        merge(other, std::less<value_type>());
+    }
+
+    template<typename Compare>
+    void merge(List& other, Compare comp)
+    {
+        auto count = other.size();
+        auto first1 = begin().node, last1 = end().node, first2 = other.begin().node, last2 = other.end().node;
+        node_base_type h, *curr = &h;
+
+        while (first1 != last1 && first2 != last2)
+        {
+            node_base_type* candidate;
+            if (comp(static_cast<node_type*>(first2)->data, static_cast<node_type*>(first1)->data))
+            {
+                candidate = first2;
+                first2 = first2->next;
+            }
+            else
+            {
+                candidate = first1;
+                first1 = first1->next;
+            }
+            candidate->prev = curr;
+            curr->next = candidate;
+            curr = candidate;
+        }
+        auto first = first1 != last1 ? first1 : first2;
+        auto last = first1 != last1 ? last1->prev : last2->prev;
+        curr->next = first;
+        first->prev = curr;
+        last->next = &head.node;
+        head.node.prev = last;
+        inc_size(count);
+        other.head.node.next = other.head.node.prev = &other.head.node;
+    }
+
+    template<typename Compare>
+    void merge(List&& other, Compare comp)
+    {
+        merge(other, comp);
     }
 
 private:
