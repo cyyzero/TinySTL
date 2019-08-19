@@ -1006,6 +1006,26 @@ public:
         splice(pos, other, first, last);
     }
 
+    // remove elements satisfying specific criteria
+    void remove(const T& value)
+    {
+        remove_if([&] (const T& v) {
+            return value == v;
+        });
+    }
+
+    template<typename UnaryPredicate>
+    void remove_if(UnaryPredicate p)
+    {
+        for (auto it = cbegin(); it != cend(); ++it)
+        {
+            if (p(*it))
+            {
+                erase(it);
+            }
+        }
+    }
+
 private:
     void default_initialize(size_t count)
     {

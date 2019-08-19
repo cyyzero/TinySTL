@@ -308,4 +308,15 @@ int main()
         std::cout << "list2: " << list2 << "\n";
     }
 
+    std::cout << "\nTest for remove() and remove_if()\n";
+    {
+        List<int> l = { 1,100,2,3,10,1,11,-1,12 };
+    
+        l.remove(1); // remove both elements equal to 1
+        l.remove_if([](int n){ return n > 10; }); // remove all elements greater than 10
+
+        // assert(l == List<int>{2, 3, 10, -1});
+        std::cout << l << '\n';
+    }
+
 }
