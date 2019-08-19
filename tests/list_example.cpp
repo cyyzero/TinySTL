@@ -282,4 +282,30 @@ int main()
         // assert(list2 == List<int>{});
     }
 
+    std::cout << "\nTest for splice()\n";
+    {
+        List<int> list1 = { 1, 2, 3, 4, 5 };
+        List<int> list2 = { 10, 20, 30, 40, 50 };
+    
+        auto it = list1.begin();
+        std::advance(it, 2);
+
+        list1.splice(it, list2);
+        assert(list1.size() == 10);
+        assert(list2.size() == 0);
+        // assert(list1 == List<int>{1, 2, 10, 20, 30, 40, 50, 3, 4, 5});
+        // assert(list2 == List<int>{});
+        std::cout << "list1: " << list1 << "\n";
+        std::cout << "list2: " << list2 << "\n";
+    
+        list2.splice(list2.begin(), list1, it, list1.end());
+    
+        assert(list1.size() == 7);
+        assert(list2.size() == 3);
+        // assert(list1 == List<int>{1, 2, 10, 20, 30, 40, 50});
+        // assert(list2 == List<int>{3, 4, 5});
+        std::cout << "list1: " << list1 << "\n";
+        std::cout << "list2: " << list2 << "\n";
+    }
+
 }

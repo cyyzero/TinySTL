@@ -928,13 +928,82 @@ public:
         last->next = &head.node;
         head.node.prev = last;
         inc_size(count);
-        other.head.node.next = other.head.node.prev = &other.head.node;
+        other.init();
     }
 
     template<typename Compare>
     void merge(List&& other, Compare comp)
     {
         merge(other, comp);
+    }
+
+    // move elements from another list
+    void splice(const_iterator pos, List& other)
+    {
+        auto p = const_cast<node_base_type*>(pos.node);
+        auto first = other.begin().node;
+        auto last = other.end().node->prev;
+
+        p->prev->next = first;
+        first->prev = p->prev;
+        last->next = p;
+        p->prev = last;
+
+        inc_size(other.size());
+        other.set_size(0);
+        other.init();
+    }
+
+    void splice(const_iterator pos, List&& other)
+    {
+        splice(pos, other);
+    }
+
+    void splice(const_iterator pos, List& other, const_iterator it)
+    {
+        auto p1 = const_cast<node_base_type*>(pos.node);
+        auto p2 = const_cast<node_base_type*>(it.node);
+
+        p2->prev->next = p2->next;
+        p2->next->prev = p2->prev;
+
+        p1->prev->next = p2;
+        p2->prev = p1->prev;
+        p2->next = p1;
+        p1->prev = p2;
+
+        other.dec_size(1);
+        inc_size(1);
+    }
+
+    void splice(const_iterator pos, List&& other, const_iterator it)
+    {
+        splice(pos, other, it);
+    }
+
+    void splice(const_iterator pos, List& other,
+                const_iterator first_, const_iterator last_)
+    {
+        auto p = const_cast<node_base_type*>(pos.node);
+        auto first = const_cast<node_base_type*>(first_.node);
+        auto last = const_cast<node_base_type*>(last_.node->prev);
+
+        auto size = std::distance(first_, last_);
+        first->prev->next = last->next;
+        last->next->prev = first->prev;
+        other.dec_size(size);
+        inc_size(size);
+
+        p->prev->next = first;
+        first->prev = p->prev;
+        last->next = p;
+        p->prev = last;
+    }
+
+    void splice(const_iterator pos, List&& other,
+                const_iterator first, const_iterator last)
+    {
+        splice(pos, other, first, last);
     }
 
 private:
