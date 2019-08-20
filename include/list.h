@@ -1130,8 +1130,55 @@ private:
         n->hook(pos);
         return n;
     }
-
 };
+
+template<class T, class Alloc>
+bool operator==(const List<T,Alloc>& lhs,
+                const List<T,Alloc>& rhs)
+{
+    auto it1 = lhs.begin(), it2 = rhs.begin();
+    for (; it1 != lhs.end() && it2 != rhs.end(); ++it1, ++it2)
+    {
+        if (*it1 != *it2)
+            return false;
+    }
+    return it1 == lhs.end() && it2 == rhs.end();
+}
+
+template<class T, class Alloc>
+bool operator!=(const List<T,Alloc>& lhs,
+                const List<T,Alloc>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template<class T, class Alloc>
+bool operator<(const List<T,Alloc>& lhs,
+               const List<T,Alloc>& rhs)
+{
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template<class T, class Alloc>
+bool operator>(const List<T,Alloc>& lhs,
+               const List<T,Alloc>& rhs)
+{
+    return rhs < lhs;
+}
+
+template<class T, class Alloc>
+bool operator<=(const List<T,Alloc>& lhs,
+                const List<T,Alloc>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+template<class T, class Alloc>
+bool operator>=(const List<T,Alloc>& lhs,
+                const List<T,Alloc>& rhs)
+{
+    return !(lhs < rhs);
+}
 
 template<typename T, typename Alloc>
 void swap(List<T,Alloc>& lhs,

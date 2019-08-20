@@ -62,17 +62,17 @@ int main()
     
         // words2 == words1
         List<std::string> words2(words1.begin(), words1.end());
-        // assert(words1 == words2);
+        assert(words1 == words2);
         std::cout << "words2: " << words2 << '\n';
     
         // words3 == words1
         List<std::string> words3(words1);
-        // assert(words1 == words3);
+        assert(words1 == words3);
         std::cout << "words3: " << words3 << '\n';
     
         // words4 is {"Mo", "Mo", "Mo", "Mo", "Mo"}
         List<std::string> words4(5, "Mo");
-        // assert(words4 == List<std::string>{"Mo", "Mo", "Mo", "Mo", "Mo"});
+        assert((words4 == List<std::string>{"Mo", "Mo", "Mo", "Mo", "Mo"}));
         std::cout << "words4: " << words4 << '\n';
 
         List<C> Cs(6, C());
@@ -123,10 +123,10 @@ int main()
     {
         List<char> characters(2);
         characters.assign(5, 'a');
-        // assert(characters == List<char>(5, 'a'));
+        assert(characters == List<char>(5, 'a'));
         std::cout << characters << "\n";
         characters.assign({'f', 'k'});
-        // assert(characters == List<char>{'f', 'k'});
+        assert((characters == List<char>{'f', 'k'}));
         std::cout << characters << '\n';
     }
 
@@ -180,11 +180,10 @@ int main()
         // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
         c.erase(c.begin());
-        // assert(c == List<int>{1, 2, 3, 4, 5, 6, 7, 8, 9});
+        assert((c == List<int>{1, 2, 3, 4, 5, 6, 7, 8, 9}));
         std::cout << c << '\n';
         // [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-    
         List<int>::iterator range_begin = c.begin();
         List<int>::iterator range_end = c.begin();
         std::advance(range_begin,2);
@@ -192,7 +191,7 @@ int main()
     
         c.erase(range_begin, range_end);
 
-        // assert(c == List<int>{1, 2, 6, 7, 8, 9});
+        assert((c == List<int>{1, 2, 6, 7, 8, 9}));
         std::cout << c << '\n';
         // [1, 2, 6, 7, 8, 9]
     
@@ -205,7 +204,7 @@ int main()
             }
         }
 
-        // assert(c == List<int>{1, 7, 9});
+        assert((c == List<int>{1, 7, 9}));
         std::cout << c << '\n';
         // [1, 7, 9]
     }
@@ -218,13 +217,13 @@ int main()
         numbers.push_back(5);
         numbers.push_back(3);
         numbers.push_back(4);
-        // assert(numbers == List<int>{5, 3, 4});
+        assert((numbers == List<int>{5, 3, 4}));
     
         std::cout << numbers << '\n'; 
     
         numbers.pop_back();
     
-        // assert(numbers == List<int>{5, 3});
+        assert((numbers == List<int>{5, 3}));
         std::cout << numbers << '\n'; 
     }
 
@@ -244,10 +243,10 @@ int main()
         List<int> l2{4,5};
         std::cout << l1 << '\n' << l2 << '\n';
         l1.swap(l2);
-        // assert(l1 == List<int>{4, 5});
-        // assert(l1.size() == 2);
-        // assert(l2 == List<int>{1,2,3});
-        // assert(l2.size() == 3);
+        assert((l1 == List<int>{4, 5}));
+        assert(l1.size() == 2);
+        assert((l2 == List<int>{1,2,3}));
+        assert(l2.size() == 3);
         std::cout << l1 << '\n' << l2 << '\n';
     }
 
@@ -256,10 +255,10 @@ int main()
         List<int> c = {1, 2, 3};
         std::cout << "The list holds: " << c << '\n';
         c.resize(5);
-        // assert(c == List<int>{1, 2, 3, 0, 0});
+        assert((c == List<int>{1, 2, 3, 0, 0}));
         std::cout << "After resize up to 5: " << c << '\n';
         c.resize(2);
-        // assert(c == List<int>{1, 2});
+        assert((c == List<int>{1, 2}));
         std::cout << "After resize down to 2: " << c << '\n';
     }
 
@@ -278,8 +277,8 @@ int main()
         list1.merge(list2);
         std::cout << "merged: " << list1 << "\n";
 
-        // assert(list1 == List<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
-        // assert(list2 == List<int>{});
+        assert((list1 == List<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+        assert((list2 == List<int>{}));
     }
 
     std::cout << "\nTest for splice()\n";
@@ -293,8 +292,8 @@ int main()
         list1.splice(it, list2);
         assert(list1.size() == 10);
         assert(list2.size() == 0);
-        // assert(list1 == List<int>{1, 2, 10, 20, 30, 40, 50, 3, 4, 5});
-        // assert(list2 == List<int>{});
+        assert((list1 == List<int>{1, 2, 10, 20, 30, 40, 50, 3, 4, 5}));
+        assert(list2 == List<int>{});
         std::cout << "list1: " << list1 << "\n";
         std::cout << "list2: " << list2 << "\n";
     
@@ -302,8 +301,8 @@ int main()
     
         assert(list1.size() == 7);
         assert(list2.size() == 3);
-        // assert(list1 == List<int>{1, 2, 10, 20, 30, 40, 50});
-        // assert(list2 == List<int>{3, 4, 5});
+        assert((list1 == List<int>{1, 2, 10, 20, 30, 40, 50}));
+        assert((list2 == List<int>{3, 4, 5}));
         std::cout << "list1: " << list1 << "\n";
         std::cout << "list2: " << list2 << "\n";
     }
@@ -315,7 +314,7 @@ int main()
         l.remove(1); // remove both elements equal to 1
         l.remove_if([](int n){ return n > 10; }); // remove all elements greater than 10
 
-        // assert(l == List<int>{2, 3, 10, -1});
+        assert((l == List<int>{2, 3, 10, -1}));
         std::cout << l << '\n';
     }
 
@@ -324,7 +323,7 @@ int main()
         List<int> l{0, 1, 2, 3, 4, 5, 6, 7};
         std::cout << "Before: " << l << '\n';
         l.reverse();
-        // assert(l == List<int>{7, 6, 5, 4, 3, 2, 1, 0});
+        assert((l == List<int>{7, 6, 5, 4, 3, 2, 1, 0}));
         std::cout << "After:  " << l << '\n';
     }
 
@@ -335,7 +334,7 @@ int main()
         std::cout << x << '\n';
         
         x.unique();
-        // assert(x == List<int>{1, 2, 3, 2, 1, 2});
+        assert((x == List<int>{1, 2, 3, 2, 1, 2}));
         std::cout << "contents after unique():";
         std::cout << x << '\n';
     }
