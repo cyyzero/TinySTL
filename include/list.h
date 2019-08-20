@@ -1026,6 +1026,15 @@ public:
         }
     }
 
+    void reverse() noexcept
+    {
+        std::swap(head.node.prev, head.node.next);
+        for (node_base_type* p = head.node.prev; p != &head.node; p = p->prev)
+        {
+            std::swap(p->next, p->prev);
+        }
+    }
+
 private:
     void default_initialize(size_t count)
     {

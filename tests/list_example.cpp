@@ -319,4 +319,13 @@ int main()
         std::cout << l << '\n';
     }
 
+    std::cout << "\nTest for reverse()\n";
+    {
+        List<int> l{0, 1, 2, 3, 4, 5, 6, 7};
+        std::cout << "Before: " << l << '\n';
+        l.reverse();
+        // assert(l == List<int>{7, 6, 5, 4, 3, 2, 1, 0});
+        std::cout << "After:  " << l << '\n';
+    }
+
 }
