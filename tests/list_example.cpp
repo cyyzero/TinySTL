@@ -328,4 +328,16 @@ int main()
         std::cout << "After:  " << l << '\n';
     }
 
+    std::cout << "\nTest for unique()\n";
+    {
+        List<int> x = {1, 2, 2, 3, 3, 2, 1, 1, 2};
+        std::cout << "contents before:";
+        std::cout << x << '\n';
+        
+        x.unique();
+        // assert(x == List<int>{1, 2, 3, 2, 1, 2});
+        std::cout << "contents after unique():";
+        std::cout << x << '\n';
+    }
+
 }

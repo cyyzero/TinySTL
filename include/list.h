@@ -1035,6 +1035,32 @@ public:
         }
     }
 
+    // remove consecutive duplicate elements
+    void unique()
+    {
+        unique([] (const T& x, const T& y) {
+            return x == y;
+        });
+    }
+
+    template<class BinaryPredicate>
+    void unique(BinaryPredicate p)
+    {
+        auto first = cbegin();
+        const auto end = --cend();
+        while (first != end)
+        {
+            auto last = first;
+            do {
+                ++last;
+            } while (p(*first, *last));
+            if (first.node->next != last.node)
+                first = erase(++first, last);
+            else
+                first = last;
+        }
+    }
+
 private:
     void default_initialize(size_t count)
     {
