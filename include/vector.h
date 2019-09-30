@@ -787,7 +787,7 @@ private:
 
         try
         {
-            cyy::uninitialized_move_a(begin(), end(), start, get_alloc_ref());
+            cyy::uninitialized_move_if_noexcept_a(begin(), end(), start, get_alloc_ref());
         }
         catch (...)
         {

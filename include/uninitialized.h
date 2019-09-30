@@ -107,5 +107,26 @@ ForwardIterator uninitialized_move_a(InputIterator first, InputIterator last,
     }
 }
 
+template<typename InputIterator, typename ForwardIterator, typename Allocator>
+ForwardIterator uninitialized_move_if_noexcept_a(InputIterator first, InputIterator last,
+                                     ForwardIterator target, Allocator& alloc)
+{
+
+    ForwardIterator cur = target;
+    try
+    {
+        for (; first != last; ++first, ++cur)
+        {
+            Allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), std::move_if_noexcept(*first));
+        }
+        return cur;
+    }
+    catch (...)
+    {
+        cyy::Destroy(target, cur, alloc);
+        throw;
+    }
+}
+
 }
 #endif
