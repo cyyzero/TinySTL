@@ -339,4 +339,15 @@ int main()
         std::cout << x << '\n';
     }
 
+    std::cout << "Test for sort()\n";
+    {
+        List<int> list = { 8,7,5,9,0,1,3,2,6,4 };
+
+        std::cout << "before:     " << list << "\n";
+        list.sort();
+        std::cout << "ascending:  " << list << "\n";
+        list.sort(std::greater<int>());
+        std::cout << "descending: " << list << "\n";
+    }
+
 }
