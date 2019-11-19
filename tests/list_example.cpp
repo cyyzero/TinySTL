@@ -264,14 +264,11 @@ int main()
 
     std::cout << "\nTest for merge()\n";
     {
-        // List<int> list1 = { 5,9,0,1,3 };
-        // List<int> list2 = { 8,7,2,6,4 };
+        List<int> list1 = { 5,9,0,1,3 };
+        List<int> list2 = { 8,7,2,6,4 };
     
-        // list1.sort();
-        // list2.sort();
-
-        List<int> list1 = { 0,1,3,5,9 };
-        List<int> list2 = { 2,4,6,7,8 };
+        list1.sort();
+        list2.sort();
         std::cout << "list1:  " << list1 << "\n";
         std::cout << "list2:  " << list2 << "\n";
         list1.merge(list2);
@@ -339,14 +336,16 @@ int main()
         std::cout << x << '\n';
     }
 
-    std::cout << "Test for sort()\n";
+    std::cout << "\nTest for sort()\n";
     {
         List<int> list = { 8,7,5,9,0,1,3,2,6,4 };
 
         std::cout << "before:     " << list << "\n";
         list.sort();
+        assert((list == List<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
         std::cout << "ascending:  " << list << "\n";
         list.sort(std::greater<int>());
+        assert((list == List<int>{9, 8, 7, 6, 5, 4, 3, 2, 1, 0}));
         std::cout << "descending: " << list << "\n";
     }
 

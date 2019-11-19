@@ -32,6 +32,12 @@ struct List_node_base
         node->next = this;
     }
 
+    void connect(List_node_base *node) noexcept
+    {
+        next = node;
+        node->prev = this;
+    }
+
     // void unhook()
 
     List_node_base *prev;
@@ -267,7 +273,7 @@ private:
     LIST_ITERATOR_COMPARE2(type2, type1)     \
     LIST_ITERATOR_COMPARE2(type2, type2)
 
-    LIST_ITERATOR_COMPARE3(List_iterator, List_const_iterator)
+LIST_ITERATOR_COMPARE3(List_iterator, List_const_iterator)
 
 #undef LIST_ITERATOR_COMPARE3
 #undef LIST_ITERATOR_COMPARE2
@@ -1061,6 +1067,27 @@ public:
         }
     }
 
+    // sort the elements
+    void sort()
+    {
+        sort(std::less<value_type>());
+    }
+
+    template<typename Compare>
+    void sort(Compare comp)
+    {
+        if (empty())
+        {
+            return;
+        }
+        auto first = head.node.next, last = head.node.prev;
+        last->connect(first);
+        first = sort_impl(first, comp);
+        last = first->prev;
+        head.node.connect(first);
+        last->connect(&head.node);
+    }
+
 private:
     void default_initialize(size_t count)
     {
@@ -1129,6 +1156,67 @@ private:
         auto n = create_node(std::forward<Args>(args)...);
         n->hook(pos);
         return n;
+    }
+
+    // merge sort of list
+    template<typename Compare>
+    node_base_type* sort_impl(node_base_type* first, Compare comp)
+    {
+        if (first == first->next)
+            return first;
+        node_base_type *fast = first->next, *mid = first->next, *last = first->prev;
+        while (fast != first && fast->next != first)
+        {
+            fast = fast->next->next;
+            mid = mid->next;
+        }
+        auto mid_prev = mid->prev;
+        mid_prev->connect(first);
+        last->connect(mid);
+        return merge_sorted_list(sort_impl(first, comp), sort_impl(mid, comp), comp);
+    }
+
+    // merge two sorted list @l1 and @l2
+    template<typename Compare>
+    node_base_type* merge_sorted_list(node_base_type* l1, node_base_type* l2, Compare comp)
+    {
+        auto l1_last = l1->prev;
+        auto l2_last = l2->prev;
+        l1_last->next = nullptr;
+        l2_last->next = nullptr;
+        node_type* p1 = static_cast<node_type*>(l1), *p2 = static_cast<node_type*>(l2);
+        node_base_type h, *prev = &h;
+        while (p1 && p2)
+        {
+            node_base_type *p;
+            if (comp(p1->data, p2->data))
+            {
+                p = p1;
+                p1 = static_cast<node_type*>(p1->next);
+            }
+            else
+            {
+                p = p2;
+                p2 = static_cast<node_type*>(p2->next);
+            }
+            prev->connect(p);
+            prev = p;
+        }
+        if (p1)
+        {
+            l1_last->connect(h.next);
+            prev->connect(p1);
+        }
+        else if (p2)
+        {
+            l2_last->connect(h.next);
+            prev->connect(p2);
+        }
+        else
+        {
+            prev->connect(h.next);
+        }
+        return h.next;
     }
 };
 
